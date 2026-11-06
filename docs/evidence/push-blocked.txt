@@ -1,0 +1,31 @@
+# Evidence: direct push to main is blocked
+
+Date: 2026-11-07 (local time)
+Repo: https://github.com/tinphan247/2026-AWAD-PA02
+Ruleset: protect-main (id 26715397), enforcement: active
+Target: ~DEFAULT_BRANCH (main)
+
+Command:
+
+    git push origin main
+
+Result: rejected by GitHub repository rules.
+
+    remote: error: GH013: Repository rule violations found for refs/heads/main.
+    remote: Review all repository rules at https://github.com/tinphan247/2026-AWAD-PA02/rules?ref=refs%2Fheads%2Fmain
+    remote:
+    remote: - Changes must be made through a pull request.
+    remote:
+    remote: - Required status check "ci" is expected.
+    remote:
+    To https://github.com/tinphan247/2026-AWAD-PA02.git
+     ! [remote rejected] main -> main (push declined due to repository rule violations)
+    error: failed to push some refs to 'https://github.com/tinphan247/2026-AWAD-PA02.git'
+
+Interpretation:
+
+- Direct pushes to `main` are refused.
+- A pull request is mandatory.
+- The required status check `ci` must exist and pass before the ref can move.
+- The same commit was then moved to branch `docs/branch-protection-evidence`
+  and delivered through a pull request instead.

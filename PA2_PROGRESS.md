@@ -27,7 +27,7 @@
 | CI run đầu tiên trên `main` | `DONE` | [run #1 — success](https://github.com/tinphan247/2026-AWAD-PA02/actions/runs/42266378686) |
 | 4 lệnh local xanh | `DONE` | lint, format:check, typecheck, test đều pass |
 | Fresh-clone verification | `DONE` | Clone sạch + `npm ci` + 4 lệnh xanh trên Node 24.22.2 và Node 25.1.0 |
-| Branch protection | `NEXT` | Phải bật trên GitHub sau khi check `ci` xuất hiện |
+| Branch protection | `DONE` | Ruleset `protect-main` active: PR + 1 approval + check `ci` + up-to-date, no bypass; verify qua API |
 | Rules file / permissions | `NEXT` | Tùng phụ trách |
 | Contract doc | `NEXT` | Tuệ phụ trách, là critical path |
 | Endpoint implementation | `BLOCKED` | Chờ contract freeze |
@@ -63,8 +63,8 @@
 
 | Task | Trạng thái | Điều kiện / ghi chú |
 |---|---|---|
-| Bật branch protection cho `main` | `NEXT` | Require PR + 1 approval + status check `ci` + up-to-date + no bypass |
-| Chụp ảnh protection | `NEXT` | Lưu `docs/evidence/branch-protection.png` |
+| Bật branch protection cho `main` | `DONE` | Ruleset `protect-main` active — [rules/26715397](https://github.com/tinphan247/2026-AWAD-PA02/rules/26715397) |
+| Chụp ảnh protection | `DONE` | `docs/evidence/branch-protection-1.png`, `-2.png`; API: `docs/evidence/branch-protection-api.json` |
 | Tạo PR đỏ → xanh đầu tiên | `NEXT` | Cố ý để lint/test đỏ, chụp merge bị chặn, sửa xanh, merge |
 | T3. Implement endpoint submissions | `BLOCKED` | Chờ Tuệ freeze contract |
 | T4. Idempotency contract tests | `BLOCKED` | Chờ contract + implementation |
@@ -150,10 +150,10 @@ Tín: PA2.md + tag pa2 + zip + nộp
 - [x] Fresh-clone verification trên Node 24.22.2 và 25.1.0
 - [x] Smoke test `GET /health`
 - [x] Ảnh cấu hình ruleset đã lưu: `docs/evidence/branch-protection-1.png`, `docs/evidence/branch-protection-2.png` (trạng thái **trước khi bấm Create**)
+- [x] Branch protection **đã lưu và active**: ruleset `protect-main` (`id 26715397`) — bằng chứng API trong `docs/evidence/branch-protection-api.json`
 
 ### Còn thiếu
 
-- [ ] Branch protection **đã lưu và active** (API `/rules/branches/main` hiện trả về rỗng)
 - [ ] PR bị check đỏ chặn merge
 - [ ] Commit/PR làm xanh
 - [ ] `AGENTS.md` + 3 adapter
@@ -173,7 +173,7 @@ Tín: PA2.md + tag pa2 + zip + nộp
 
 | Ưu tiên | Việc | Người | Kết quả |
 |---:|---|---|---|
-| 1 | Bật branch protection + screenshot | Tín | `docs/evidence/branch-protection.png` |
+| 1 | ~~Bật branch protection + screenshot~~ (xong) | Tín | `docs/evidence/branch-protection-*.png` + API JSON |
 | 2 | Contract v1 | Tuệ | `docs/contract/post-labs-labId-submissions.md` |
 | 3 | `AGENTS.md` + adapters + permissions | Tùng | Rules file đủ 4 phần + 3 tầng |
 | 4 | `.env.example` + AI-LOG khởi tạo | Tùng | Secrets baseline |

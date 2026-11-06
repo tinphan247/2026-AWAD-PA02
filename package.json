@@ -1,0 +1,27 @@
+{
+  "name": "leetkob-pa2",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "PA#2 harness and quality gate for LeeTKOB",
+  "engines": {
+    "node": ">=24 <26"
+  },
+  "scripts": {
+    "dev": "node --watch src/main.js",
+    "start": "node src/main.js",
+    "lint": "eslint . --max-warnings=0",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test --test-reporter=spec"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "@types/node": "^24.19.2",
+    "eslint": "^9.39.5",
+    "globals": "^17.14.0",
+    "prettier": "^3.9.10",
+    "typescript": "^7.0.2"
+  }
+}

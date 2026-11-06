@@ -1,0 +1,13 @@
+# Assignment source materials — not part of the deliverable
+*.pdf
+
+# Local secrets and environment
+.env
+.env.*
+!.env.example
+
+# Dependencies and generated output
+node_modules/
+coverage/
+data/
+*.log

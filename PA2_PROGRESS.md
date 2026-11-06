@@ -3,7 +3,8 @@
 **Cập nhật:** 07/11/2026  
 **Repo:** https://github.com/tinphan247/2026-AWAD-PA02  
 **Branch:** `main`  
-**Commit mới nhất:** `8c5cad5` — scaffold toolchain, health skeleton và CI
+**Commit scaffold:** `8c5cad5` — toolchain, health skeleton và CI  
+**CI run đầu tiên:** [run #1 — success](https://github.com/tinphan247/2026-AWAD-PA02/actions/runs/42266378686)
 
 **Ký hiệu trạng thái:**
 
@@ -23,7 +24,9 @@
 | Toolchain 4 lệnh | `DONE` | `package.json`, ESLint, Prettier, TypeScript/JSDoc, `node:test` |
 | Skeleton HTTP | `DONE` | `GET /health`; chưa implement endpoint contract |
 | CI workflow | `DONE` | `.github/workflows/ci.yml`, trigger PR/main/tag `pa2` |
+| CI run đầu tiên trên `main` | `DONE` | [run #1 — success](https://github.com/tinphan247/2026-AWAD-PA02/actions/runs/42266378686) |
 | 4 lệnh local xanh | `DONE` | lint, format:check, typecheck, test đều pass |
+| Fresh-clone verification | `DONE` | Clone sạch + `npm ci` + 4 lệnh xanh trên Node 24.22.2 và Node 25.1.0 |
 | Branch protection | `NEXT` | Phải bật trên GitHub sau khi check `ci` xuất hiện |
 | Rules file / permissions | `NEXT` | Tùng phụ trách |
 | Contract doc | `NEXT` | Tuệ phụ trách, là critical path |
@@ -51,24 +54,24 @@
 | T1. Skeleton HTTP tối thiểu | `DONE` | `src/app.js`, `src/server.js`, `src/main.js`, `test/unit/smoke.test.js` |
 | T1. README skeleton | `DONE` | `README.md` — 4 lệnh, Node 24, scope, secrets |
 | T2. CI workflow | `DONE` | `.github/workflows/ci.yml` — PR/main/tag `pa2`, job `ci` |
+| Push scaffold + CI run đầu tiên | `DONE` | [run #1 — success](https://github.com/tinphan247/2026-AWAD-PA02/actions/runs/42266378686) |
 | Kiểm tra local 4 lệnh | `DONE` | `npm run lint`, `format:check`, `typecheck`, `test` đều pass ngày 07/11 |
+| Fresh-clone verification | `DONE` | Clone sạch + `npm ci` + 4 lệnh xanh trên Node 24.22.2 và Node 25.1.0 |
 | Commit scaffold | `DONE` | `8c5cad5` |
 
 ### 2.2. Việc tiếp theo của Tín
 
 | Task | Trạng thái | Điều kiện / ghi chú |
 |---|---|---|
-| Push commit scaffold lên GitHub | `NEXT` | Để CI chạy lần đầu trên `main` |
 | Bật branch protection cho `main` | `NEXT` | Require PR + 1 approval + status check `ci` + up-to-date + no bypass |
 | Chụp ảnh protection | `NEXT` | Lưu `docs/evidence/branch-protection.png` |
 | Tạo PR đỏ → xanh đầu tiên | `NEXT` | Cố ý để lint/test đỏ, chụp merge bị chặn, sửa xanh, merge |
-| Fresh-clone verification | `NEXT` | Clone temp, `npm ci` + 4 lệnh |
 | T3. Implement endpoint submissions | `BLOCKED` | Chờ Tuệ freeze contract |
 | T4. Idempotency contract tests | `BLOCKED` | Chờ contract + implementation |
 | T5. PA2.md + tag + zip + nộp | `TODO` | Chờ đủ evidence cuối |
 | T6. Review rules/contract | `TODO` | Khi Tùng/Tuệ có bản nháp |
 
-**Lưu ý:** hiện local dùng Node `v25.1.0`, CI pin Node 24 LTS qua `.nvmrc`. Trước khi tag cần verify fresh clone trên Node 24 (Docker `node:24` hoặc máy có Node 24).
+**Lưu ý:** local dùng Node `v25.1.0`, CI pin Node 24 LTS qua `.nvmrc`. Fresh clone đã được verify trên Node `24.22.2` và `25.1.0`. Docker Desktop chưa chạy nên chưa có Docker verification; không bắt buộc vì CI đã chạy Node 24.
 
 ---
 
@@ -143,6 +146,8 @@ Tín: PA2.md + tag pa2 + zip + nộp
 - [x] Commit scaffold `8c5cad5`
 - [x] 4 lệnh local xanh (log ngày 07/11)
 - [x] CI workflow trong repo
+- [x] CI run đầu tiên trên `main` — success
+- [x] Fresh-clone verification trên Node 24.22.2 và 25.1.0
 - [x] Smoke test `GET /health`
 
 ### Còn thiếu
@@ -167,13 +172,11 @@ Tín: PA2.md + tag pa2 + zip + nộp
 
 | Ưu tiên | Việc | Người | Kết quả |
 |---:|---|---|---|
-| 1 | Push scaffold + kiểm tra CI lần đầu | Tín | Run `ci` trên `main` |
-| 2 | Bật branch protection + screenshot | Tín | `docs/evidence/branch-protection.png` |
-| 3 | Contract v1 | Tuệ | `docs/contract/post-labs-labId-submissions.md` |
-| 4 | `AGENTS.md` + adapters + permissions | Tùng | Rules file đủ 4 phần + 3 tầng |
-| 5 | `.env.example` + AI-LOG khởi tạo | Tùng | Secrets baseline |
-| 6 | PR đỏ → xanh đầu tiên | Tín | Evidence tiêu chí #4 |
-| 7 | Fresh-clone verification | Tín | Log 4 lệnh xanh |
+| 1 | Bật branch protection + screenshot | Tín | `docs/evidence/branch-protection.png` |
+| 2 | Contract v1 | Tuệ | `docs/contract/post-labs-labId-submissions.md` |
+| 3 | `AGENTS.md` + adapters + permissions | Tùng | Rules file đủ 4 phần + 3 tầng |
+| 4 | `.env.example` + AI-LOG khởi tạo | Tùng | Secrets baseline |
+| 5 | PR đỏ → xanh đầu tiên | Tín | Evidence tiêu chí #4 |
 
 ---
 

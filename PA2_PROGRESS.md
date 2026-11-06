@@ -149,10 +149,11 @@ Tín: PA2.md + tag pa2 + zip + nộp
 - [x] CI run đầu tiên trên `main` — success
 - [x] Fresh-clone verification trên Node 24.22.2 và 25.1.0
 - [x] Smoke test `GET /health`
+- [x] Ảnh cấu hình ruleset đã lưu: `docs/evidence/branch-protection-1.png`, `docs/evidence/branch-protection-2.png` (trạng thái **trước khi bấm Create**)
 
 ### Còn thiếu
 
-- [ ] Branch protection screenshot
+- [ ] Branch protection **đã lưu và active** (API `/rules/branches/main` hiện trả về rỗng)
 - [ ] PR bị check đỏ chặn merge
 - [ ] Commit/PR làm xanh
 - [ ] `AGENTS.md` + 3 adapter

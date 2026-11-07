@@ -61,5 +61,11 @@ No secret belongs in this repository. The model API key is read only from the
 environment, must never be visible inside the sandbox, and must have a spending
 cap on the provider dashboard. PA#2 makes no model calls.
 
-The spending cap and the planned model for PA#3 will be recorded here by the
-rules/security owner.
+Only `HOST` and `PORT` are currently read by the application; `.env.example`
+lists them without values. The application does not load a `.env` file itself.
+The team still needs to choose the PA#3 provider and model, set an actual cap
+on the provider dashboard, and record both here. PA#2 makes no model calls, so
+its model cost is USD 0; the per-lab cost for PA#3 has not yet been measured.
+
+The history scan procedure and its scope are recorded in
+`docs/evidence/secret-scan.txt`. Repeat the scan on the final submission commit.

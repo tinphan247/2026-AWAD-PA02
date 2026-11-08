@@ -1,9 +1,10 @@
 # PA#2 — TIẾN ĐỘ CÔNG VIỆC
 
-**Cập nhật:** 07/11/2026  
+**Cập nhật:** 08/11/2026  
 **Repo:** https://github.com/tinphan247/2026-AWAD-PA02  
 **Branch:** `main`  
 **Commit scaffold:** `8c5cad5` — toolchain, health skeleton và CI  
+**Merge gần nhất:** `c677c0a` — PR #1 (rules + security baseline)  
 **CI run đầu tiên:** [run #1 — success](https://github.com/tinphan247/2026-AWAD-PA02/actions/runs/42266378686)
 
 **Ký hiệu trạng thái:**
@@ -28,7 +29,10 @@
 | 4 lệnh local xanh | `DONE` | lint, format:check, typecheck, test đều pass |
 | Fresh-clone verification | `DONE` | Clone sạch + `npm ci` + 4 lệnh xanh trên Node 24.22.2 và Node 25.1.0 |
 | Branch protection | `DONE` | Ruleset `protect-main` active: PR + 1 approval + check `ci` + up-to-date, no bypass; verify qua API |
-| Rules file / permissions | `IN REVIEW` | PR #1 (`tung/rules-security`), check `ci` xanh, chờ approval |
+| Rules file / permissions | `DONE` | PR #1 đã merge vào `main` (`c677c0a`); `AGENTS.md` + 3 adapter + 3 tầng quyền |
+| `.env.example` + secret scan | `DONE` | PR #1 — đủ biến (`PORT`, `HOST`, `MODEL_*`, `DATABASE_PATH`), Gitleaks sạch |
+| AI-LOG | `DONE` | PR #1 — 3 entry: Tùng ×2, Tín scaffold |
+| Spending cap PA#3 | `PENDING` | README ghi cap **USD 0**; chờ account owner xác nhận provider-side trước lần gọi PA#3 đầu tiên |
 | Contract doc | `NEXT` | Tuệ phụ trách, là critical path |
 | Endpoint implementation | `BLOCKED` | Chờ contract freeze |
 | Contract tests đầy đủ | `BLOCKED` | Chờ contract + implementation |
@@ -58,6 +62,7 @@
 | Kiểm tra local 4 lệnh | `DONE` | `npm run lint`, `format:check`, `typecheck`, `test` đều pass ngày 07/11 |
 | Fresh-clone verification | `DONE` | Clone sạch + `npm ci` + 4 lệnh xanh trên Node 24.22.2 và Node 25.1.0 |
 | Commit scaffold | `DONE` | `8c5cad5` |
+| Review + approve PR #1 | `DONE` | Approved và merged, `c677c0a` |
 
 ### 2.2. Việc tiếp theo của Tín
 
@@ -65,6 +70,7 @@
 |---|---|---|
 | Bật branch protection cho `main` | `DONE` | Ruleset `protect-main` active — [rules/26715397](https://github.com/tinphan247/2026-AWAD-PA02/rules/26715397) |
 | Chụp ảnh protection | `DONE` | `docs/evidence/branch-protection-1.png`, `-2.png`; API: `docs/evidence/branch-protection-api.json` |
+| PR #2 — bằng chứng protection + tracker | `IN REVIEW` | `docs/branch-protection-evidence`, đã sync với `main`; chờ `ci` xanh + approval |
 | Tạo PR đỏ → xanh đầu tiên | `NEXT` | Cố ý để lint/test đỏ, chụp merge bị chặn, sửa xanh, merge |
 | T3. Implement endpoint submissions | `BLOCKED` | Chờ Tuệ freeze contract |
 | T4. Idempotency contract tests | `BLOCKED` | Chờ contract + implementation |
@@ -79,22 +85,22 @@
 
 | Task | Trạng thái | Điều kiện / ghi chú |
 |---|---|---|
-| T1. `AGENTS.md` canonical | `IN REVIEW` | PR #1, CI xanh; đủ 4 phần + 3 tầng quyền |
-| T1. Adapter `CLAUDE.md` | `IN REVIEW` | PR #1 — `@AGENTS.md` |
-| T1. Adapter `.cursor/rules/000-project.mdc` | `IN REVIEW` | PR #1 — `alwaysApply: true`, trỏ `AGENTS.md` |
-| T1. Adapter `.github/copilot-instructions.md` | `IN REVIEW` | PR #1 — pointer ngắn tới `AGENTS.md` |
-| T1. 2 dòng “never” có truy vết | `TODO` | **Thiếu**: never list hiện chưa có commit/AI-LOG trace + câu chuyện thật |
-| T2. Permissions 3 tầng | `IN REVIEW` | PR #1 — Allowed / Ask first / Never |
-| T3. `.env.example` | `IN REVIEW` | PR #1 — có `PORT`, `HOST`; chưa có `MODEL_*` reserved cho PA3 |
-| T3. Secret scan full history | `IN REVIEW` | PR #1 — Gitleaks 8.30.1, `docs/evidence/secret-scan.txt` |
-| T3. Spending cap + README | `TODO` | **Chưa chốt** provider/model PA3 và cap cụ thể; PA2 cost = 0 |
-| T4. Khởi tạo `AI-LOG.md` | `IN REVIEW` | PR #1 — 2 entry của Tùng; **còn thiếu entry setup/scaffold của Tín** |
+| T1. `AGENTS.md` canonical | `DONE` | PR #1 merged — 4 phần + 3 tầng quyền |
+| T1. Adapter `CLAUDE.md` | `DONE` | PR #1 — `@AGENTS.md` |
+| T1. Adapter `.cursor/rules/000-project.mdc` | `DONE` | PR #1 — `alwaysApply: true`, trỏ `AGENTS.md` |
+| T1. Adapter `.github/copilot-instructions.md` | `DONE` | PR #1 — pointer ngắn tới `AGENTS.md` |
+| T1. 2 dòng “never” có truy vết | `DONE` | PR #1 — link tới AI-LOG anchor + commit `8c5cad5` |
+| T2. Permissions 3 tầng | `DONE` | PR #1 — Allowed / Ask first / Never |
+| T3. `.env.example` | `DONE` | PR #1 — `PORT`, `HOST`, `MODEL_*`, `DATABASE_PATH`, không giá trị |
+| T3. Secret scan full history | `DONE` | PR #1 — Gitleaks 8.30.1, `docs/evidence/secret-scan.txt`; chạy lại trên commit nộp cuối |
+| T3. Spending cap + README | `PENDING` | README ghi cap **USD 0** (billing trả phí chỉ bật khi cả nhóm đồng ý); chờ account owner xác nhận provider-side + ảnh bằng chứng trước lần gọi PA#3 đầu tiên |
+| T4. Khởi tạo `AI-LOG.md` | `DONE` | PR #1 — 3 entry: Tùng ×2, Tín scaffold (OpenCode / DeepSeek V4.1 Flash Free) |
 | T5. Auth/ownership contract tests | `BLOCKED` | Chờ contract freeze |
 | T6. Review contract/CI | `TODO` | Sau khi có bản nháp |
 
-**PR #1:** `docs: add assistant rules and security baseline` — branch `tung/rules-security`, commit `f49add2`, check `ci` **success**, **chưa có human approval**. Cần ≥ 1 approval để merge.
+**PR #1:** `docs: add assistant rules and security baseline` — branch `tung/rules-security`, merged tại `c677c0a` (5 commit, `ci` success, 1 approval).
 
-**Ưu tiên:** merge PR #1 (sau review), bổ sung truy vết cho never list, chốt spending cap, thêm entry AI-LOG của Tín.
+**Việc còn lại của Tùng:** xác nhận provider-side spending cap trước PA#3; review contract; viết auth/ownership contract tests sau khi contract freeze.
 
 ---
 
@@ -154,17 +160,17 @@ Tín: PA2.md + tag pa2 + zip + nộp
 - [x] Ảnh cấu hình ruleset đã lưu: `docs/evidence/branch-protection-1.png`, `docs/evidence/branch-protection-2.png` (trạng thái **trước khi bấm Create**)
 - [x] Branch protection **đã lưu và active**: ruleset `protect-main` (`id 26715397`) — bằng chứng API trong `docs/evidence/branch-protection-api.json`
 - [x] Direct push bị chặn — `docs/evidence/push-blocked.txt` (trên nhánh `docs/branch-protection-evidence`)
-- [x] PR #1 của Tùng (`tung/rules-security`) mở, check `ci` xanh
+- [x] PR #1 đã merge vào `main` (`c677c0a`) — rules, permissions, `.env.example`, secret scan, AI-LOG
+- [x] Never list có 2 dòng truy vết AI-LOG + commit `8c5cad5`
+- [x] AI-LOG có entry scaffold của Tín (OpenCode / DeepSeek V4.1 Flash Free)
+- [x] README ghi spending cap **USD 0**
 
 ### Còn thiếu
 
-- [ ] Merge PR #1 (cần 1 human approval)
-- [ ] Merge PR cho nhánh `docs/branch-protection-evidence`
+- [ ] Merge PR #2 (`docs/branch-protection-evidence`) — cần `ci` xanh + 1 approval
 - [ ] PR bị check đỏ chặn merge (deliberate red run)
 - [ ] Commit/PR làm xanh
-- [ ] `AGENTS.md` never list có ≥ 2 dòng truy vết commit/AI-LOG
-- [ ] Spending cap PA3 + provider/model
-- [ ] AI-LOG entry cho phần setup/scaffold của Tín
+- [ ] Spending cap PA#3: account owner xác nhận provider-side + ảnh bằng chứng
 - [ ] `docs/contract/post-labs-labId-submissions.md`
 - [ ] Contract tests đầy đủ
 - [ ] Deliberate contract break PR
@@ -179,11 +185,11 @@ Tín: PA2.md + tag pa2 + zip + nộp
 
 | Ưu tiên | Việc | Người | Kết quả |
 |---:|---|---|---|
-| 1 | Review + approve + merge PR #1 (rules/security) | Tín / Tuệ | `main` có `AGENTS.md`, adapters, `.env.example`, secret scan, AI-LOG |
-| 2 | Mở PR cho `docs/branch-protection-evidence` | Tín | Tracker + bằng chứng push bị chặn vào `main` |
-| 3 | Contract v1 | Tuệ | `docs/contract/post-labs-labId-submissions.md` |
-| 4 | Bổ sung truy vết never list + chốt spending cap | Tùng | Hai dòng never có commit/AI-LOG; README có cap/provider |
-| 5 | PR đỏ → xanh đầu tiên | Tín | Evidence tiêu chí #4 |
+| 1 | Merge PR #2 (sau `ci` xanh + approval) | Tín / Tùng / Tuệ | Bằng chứng protection + tracker vào `main` |
+| 2 | Contract v1 | Tuệ | `docs/contract/post-labs-labId-submissions.md` |
+| 3 | PR đỏ → xanh đầu tiên | Tín | Evidence tiêu chí #4: chụp màn hình merge bị chặn khi `ci` đỏ, link run đỏ + commit xanh |
+| 4 | Xác nhận spending cap provider-side | Tùng | Ảnh/ghi chú vào `docs/evidence/`, cập nhật README nếu cần |
+| 5 | Implement endpoint + contract tests | Tín / Tuệ / Tùng | Sau khi contract freeze |
 
 ---
 

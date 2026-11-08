@@ -21,7 +21,7 @@ Assistant permissions:
   assertions, run the four checks and start the local server.
 - **Ask first:** change the contract, dependencies, scripts, CI, branch
   protection or schema; access a network service, use a secret or real model,
-  rewrite history, force-push or delete a test.
+  rewrite history or force-push.
 - **Never:** the actions in the section below.
 
 # Never
@@ -29,6 +29,11 @@ Assistant permissions:
 - Commit secrets or expose them to a sandbox or CI logs.
 - Call a real model from a unit test.
 - Alter tests, evaluation data or labels merely to make a check pass.
+- Delete a test.
+- Adopt dependency upgrades with unresolved audit findings. See [the ESLint
+  10 rejection](AI-LOG.md#eslint-10-upgrade).
+- Ignore lint failures or leave unused imports in the HTTP app. See [the
+  scaffold lint failure](AI-LOG.md#unused-import-in-the-http-app).
 - Weaken required checks, push directly to protected main, or merge a red PR.
 - Run student code outside a sandbox, or send identifiable student code to a model.
 - Change the API contract silently.

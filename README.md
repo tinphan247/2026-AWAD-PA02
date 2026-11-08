@@ -63,9 +63,13 @@ cap on the provider dashboard. PA#2 makes no model calls.
 
 Only `HOST` and `PORT` are currently read by the application; `.env.example`
 lists them without values. The application does not load a `.env` file itself.
-The team still needs to choose the PA#3 provider and model, set an actual cap
-on the provider dashboard, and record both here. PA#2 makes no model calls, so
-its model cost is USD 0; the per-lab cost for PA#3 has not yet been measured.
+The `MODEL_*` and `DATABASE_PATH` entries are reserved for PA#3.
+
+PA#2 makes no model calls and its model API cost is USD 0. The proposed PA#3
+trial budget is USD 0 using a free tier. The provider, exact model ID, and
+dashboard enforcement are pending confirmation. Record the actual limit and
+its evidence here once verified. PA#3 per-lab cost will be measured during
+evaluation.
 
 The history scan procedure and its scope are recorded in
 `docs/evidence/secret-scan.txt`. Repeat the scan on the final submission commit.

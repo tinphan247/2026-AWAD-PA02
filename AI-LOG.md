@@ -27,8 +27,7 @@
 ## 2026-11-07 — Tín — toolchain and scaffold
 
 - Task: set up the Node.js toolchain, health endpoint, and required CI checks.
-- Tool/model: awaiting confirmation from Tín. The review identifies an
-  AI-suggested upgrade but does not name the tool or model.
+- Tool/model: DeepSeek (reported by Tùng). Exact model version unconfirmed.
 - Sources: [Tín's review](https://github.com/tinphan247/2026-AWAD-PA02/pull/1#pullrequestreview-5817069400)
   describes the incidents. [Commit 8c5cad5](https://github.com/tinphan247/2026-AWAD-PA02/commit/8c5cad5)
   records the resulting scaffold. It does not contain the rejected draft.

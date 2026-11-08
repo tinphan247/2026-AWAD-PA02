@@ -31,9 +31,10 @@ Assistant permissions:
 - Alter tests, evaluation data or labels merely to make a check pass.
 - Delete a test.
 - Adopt dependency upgrades with unresolved audit findings. See [the ESLint
-  10 rejection](AI-LOG.md#eslint-10-upgrade).
+  10 rejection](AI-LOG.md#eslint-10-upgrade), commit `8c5cad5`.
 - Ignore lint failures or leave unused imports in the HTTP app. See [the
-  scaffold lint failure](AI-LOG.md#unused-import-in-the-http-app).
+  scaffold lint failure](AI-LOG.md#unused-import-in-the-http-app), commit
+  `8c5cad5`.
 - Weaken required checks, push directly to protected main, or merge a red PR.
 - Run student code outside a sandbox, or send identifiable student code to a model.
 - Change the API contract silently.

@@ -27,8 +27,7 @@
 ## 2026-11-07 — Tín — toolchain and scaffold
 
 - Task: set up the Node.js toolchain, health endpoint, and required CI checks.
-- Tool/model: DeepSeek (reported by Tùng). Tín selected models as needed
-  without a fixed model for the scaffold. Exact model IDs were not recorded.
+- Tool/model: OpenCode — DeepSeek V4.1 Flash Free.
 - Sources: [Tín's review](https://github.com/tinphan247/2026-AWAD-PA02/pull/1#pullrequestreview-5817069400)
   describes the incidents. [Commit 8c5cad5](https://github.com/tinphan247/2026-AWAD-PA02/commit/8c5cad5)
   records the resulting scaffold. It does not contain the rejected draft.
@@ -41,6 +40,17 @@
 
 ### Unused import in the HTTP app
 
-- Changed: Tín reports that `npm run lint` caught an unused import in
-  `src/app.js`. The scaffold commit contains the corrected file. The review
-  does not identify a separate rejected AI proposal for this incident.
+- Changed: `npm run lint` caught an unused import in `src/app.js` that the
+  assistant had generated. Commit `8c5cad5` contains the corrected file. This
+  incident produced a correction, not a separate rejected proposal.
+
+## 2026-11-08 — Tín — OpenCode (DeepSeek V4.1 Flash Free)
+
+- Task: review PR #1 against the PA#2 rubric and finish the remaining points.
+- Changed: README now states a definitive USD 0 spending cap and how it is
+  enforced; the scaffold entry names the actual tool and model; the two traced
+  "never" lines cite commit `8c5cad5` directly.
+- Rejected: refused to claim that a provider dashboard limit had been verified
+  while no provider account was confirmed. The README states the cap, and the
+  account owner records provider-side evidence before the first PA#3 call.
+- Evidence: [PR #1](https://github.com/tinphan247/2026-AWAD-PA02/pull/1).

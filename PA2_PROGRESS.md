@@ -28,7 +28,7 @@
 | 4 lệnh local xanh | `DONE` | lint, format:check, typecheck, test đều pass |
 | Fresh-clone verification | `DONE` | Clone sạch + `npm ci` + 4 lệnh xanh trên Node 24.22.2 và Node 25.1.0 |
 | Branch protection | `DONE` | Ruleset `protect-main` active: PR + 1 approval + check `ci` + up-to-date, no bypass; verify qua API |
-| Rules file / permissions | `NEXT` | Tùng phụ trách |
+| Rules file / permissions | `IN REVIEW` | PR #1 (`tung/rules-security`), check `ci` xanh, chờ approval |
 | Contract doc | `NEXT` | Tuệ phụ trách, là critical path |
 | Endpoint implementation | `BLOCKED` | Chờ contract freeze |
 | Contract tests đầy đủ | `BLOCKED` | Chờ contract + implementation |
@@ -79,20 +79,22 @@
 
 | Task | Trạng thái | Điều kiện / ghi chú |
 |---|---|---|
-| T1. `AGENTS.md` canonical | `NEXT` | Có thể làm ngay; đủ 4 phần stack/commands/conventions/never + 3 tầng permissions |
-| T1. Adapter `CLAUDE.md` | `NEXT` | `@AGENTS.md` |
-| T1. Adapter `.cursor/rules/000-project.mdc` | `NEXT` | `alwaysApply: true`, trỏ `AGENTS.md` |
-| T1. Adapter `.github/copilot-instructions.md` | `NEXT` | Pointer ngắn tới `AGENTS.md` |
-| T1. 2 dòng “never” có truy vết | `BLOCKED` | Cần sự cố thật hoặc gate self-test có commit/AI-LOG |
-| T2. Permissions 3 tầng | `NEXT` | Có thể làm ngay trong `AGENTS.md` hoặc `docs/permissions.md` |
-| T3. `.env.example` | `NEXT` | Hiện app đọc `PORT`, `HOST`; thêm `MODEL_*` reserved cho PA3 |
-| T3. Secret scan full history | `NEXT` | Chạy `gitleaks`/`trufflehog`, lưu report |
-| T3. Spending cap + README | `NEXT` | Chốt provider/model PA3, cap cụ thể; PA2 cost = 0 |
-| T4. Khởi tạo `AI-LOG.md` | `NEXT` | Nhận entry setup/scaffold từ Tín; ghi tool/model |
+| T1. `AGENTS.md` canonical | `IN REVIEW` | PR #1, CI xanh; đủ 4 phần + 3 tầng quyền |
+| T1. Adapter `CLAUDE.md` | `IN REVIEW` | PR #1 — `@AGENTS.md` |
+| T1. Adapter `.cursor/rules/000-project.mdc` | `IN REVIEW` | PR #1 — `alwaysApply: true`, trỏ `AGENTS.md` |
+| T1. Adapter `.github/copilot-instructions.md` | `IN REVIEW` | PR #1 — pointer ngắn tới `AGENTS.md` |
+| T1. 2 dòng “never” có truy vết | `TODO` | **Thiếu**: never list hiện chưa có commit/AI-LOG trace + câu chuyện thật |
+| T2. Permissions 3 tầng | `IN REVIEW` | PR #1 — Allowed / Ask first / Never |
+| T3. `.env.example` | `IN REVIEW` | PR #1 — có `PORT`, `HOST`; chưa có `MODEL_*` reserved cho PA3 |
+| T3. Secret scan full history | `IN REVIEW` | PR #1 — Gitleaks 8.30.1, `docs/evidence/secret-scan.txt` |
+| T3. Spending cap + README | `TODO` | **Chưa chốt** provider/model PA3 và cap cụ thể; PA2 cost = 0 |
+| T4. Khởi tạo `AI-LOG.md` | `IN REVIEW` | PR #1 — 2 entry của Tùng; **còn thiếu entry setup/scaffold của Tín** |
 | T5. Auth/ownership contract tests | `BLOCKED` | Chờ contract freeze |
 | T6. Review contract/CI | `TODO` | Sau khi có bản nháp |
 
-**Ưu tiên:** T1 + T2 + T3 có thể làm song song ngay hôm nay; T4 nhận entry từ Tín.
+**PR #1:** `docs: add assistant rules and security baseline` — branch `tung/rules-security`, commit `f49add2`, check `ci` **success**, **chưa có human approval**. Cần ≥ 1 approval để merge.
+
+**Ưu tiên:** merge PR #1 (sau review), bổ sung truy vết cho never list, chốt spending cap, thêm entry AI-LOG của Tín.
 
 ---
 
@@ -151,18 +153,22 @@ Tín: PA2.md + tag pa2 + zip + nộp
 - [x] Smoke test `GET /health`
 - [x] Ảnh cấu hình ruleset đã lưu: `docs/evidence/branch-protection-1.png`, `docs/evidence/branch-protection-2.png` (trạng thái **trước khi bấm Create**)
 - [x] Branch protection **đã lưu và active**: ruleset `protect-main` (`id 26715397`) — bằng chứng API trong `docs/evidence/branch-protection-api.json`
+- [x] Direct push bị chặn — `docs/evidence/push-blocked.txt` (trên nhánh `docs/branch-protection-evidence`)
+- [x] PR #1 của Tùng (`tung/rules-security`) mở, check `ci` xanh
 
 ### Còn thiếu
 
-- [ ] PR bị check đỏ chặn merge
+- [ ] Merge PR #1 (cần 1 human approval)
+- [ ] Merge PR cho nhánh `docs/branch-protection-evidence`
+- [ ] PR bị check đỏ chặn merge (deliberate red run)
 - [ ] Commit/PR làm xanh
-- [ ] `AGENTS.md` + 3 adapter
-- [ ] `.env.example` + secret scan report
+- [ ] `AGENTS.md` never list có ≥ 2 dòng truy vết commit/AI-LOG
+- [ ] Spending cap PA3 + provider/model
+- [ ] AI-LOG entry cho phần setup/scaffold của Tín
 - [ ] `docs/contract/post-labs-labId-submissions.md`
 - [ ] Contract tests đầy đủ
 - [ ] Deliberate contract break PR
 - [ ] `PA2.md` đủ link
-- [ ] `AI-LOG.md` với ≥ 2 sự cố thật
 - [ ] Tag `pa2` + CI run cho tag
 - [ ] `SELF_ASSESSMENT_REPORT.md`
 - [ ] Zip incl `.git` đúng tên
@@ -173,10 +179,10 @@ Tín: PA2.md + tag pa2 + zip + nộp
 
 | Ưu tiên | Việc | Người | Kết quả |
 |---:|---|---|---|
-| 1 | ~~Bật branch protection + screenshot~~ (xong) | Tín | `docs/evidence/branch-protection-*.png` + API JSON |
-| 2 | Contract v1 | Tuệ | `docs/contract/post-labs-labId-submissions.md` |
-| 3 | `AGENTS.md` + adapters + permissions | Tùng | Rules file đủ 4 phần + 3 tầng |
-| 4 | `.env.example` + AI-LOG khởi tạo | Tùng | Secrets baseline |
+| 1 | Review + approve + merge PR #1 (rules/security) | Tín / Tuệ | `main` có `AGENTS.md`, adapters, `.env.example`, secret scan, AI-LOG |
+| 2 | Mở PR cho `docs/branch-protection-evidence` | Tín | Tracker + bằng chứng push bị chặn vào `main` |
+| 3 | Contract v1 | Tuệ | `docs/contract/post-labs-labId-submissions.md` |
+| 4 | Bổ sung truy vết never list + chốt spending cap | Tùng | Hai dòng never có commit/AI-LOG; README có cap/provider |
 | 5 | PR đỏ → xanh đầu tiên | Tín | Evidence tiêu chí #4 |
 
 ---

@@ -262,3 +262,17 @@
   PR #6 commit list with `5fbc56e` red and every later commit green.
 - Rejected: editing a test to make the break pass, or weakening the required
   check; both are forbidden by `AGENTS.md`.
+
+## 2026-11-10 — Tuệ — Claude Code (Claude Opus 5.5): make the red check findable
+
+- Task: after PR #6 merged, its page showed only the green checks of its last
+  commit, and the red check on the break commit was hard to find.
+- Tool/model: Claude Code in VS Code, Claude Opus 5.5. No test calls a model.
+- Prompt (verbatim): "ok make it easy for graders to find".
+- Result: `docs/evidence/contract-break.md` now opens with three direct links
+  that show the red result: the PR #6 Commits tab, commit `5fbc56e`, and the
+  red job log. The assistant first confirmed through the GitHub API that
+  `5fbc56e` is in `main`'s history and that its `ci` check is still recorded as
+  a failure.
+- Rejected: opening a second break PR only to make a red check visible on a
+  PR's front page; the existing red run is already recorded and linked.

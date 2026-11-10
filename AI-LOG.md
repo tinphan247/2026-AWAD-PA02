@@ -113,3 +113,32 @@
   Rejected: comparing known fields only, because a field added to v1 later would
   change what a stored key means.
 - Evidence: the pull request that adds the contract.
+
+## 2026-11-10 — Tuệ — Claude Code (Claude Opus 5.5): contract test helpers and success/error tests
+
+- Task: following the team plan, write `test/contract/helpers.js` and
+  `test/contract/submissions.success-errors.test.js` from the frozen contract
+  only, on branch `test/contract-helpers`.
+- Tool/model: Claude Code in VS Code, Claude Opus 5.5. No test calls a model.
+- Prompt (verbatim): "ok i will do my job first, tin is agree with the seams
+  test, follow @PLAN.md create branch test/contract-helpers and create the
+  helpers.js and test/contract/submissions.success-errors.test.js, ask me to
+  make sure you understand the plan"
+- Decisions Tuệ made when asked: branch from `origin/main`; helpers and tests as
+  two commits on one branch; seam shape `createApp({ seed, repo, hooks, clock })`
+  returning `{ handler, testing }`, with the helper owning the seed; commit
+  locally only, no push.
+- Result: the helper is the only file that knows the test seam agreed with Tín.
+  It declares the seam as JSDoc types at the top and casts the skeleton's
+  `createApp` to it. `startApp()` fails with a clear message, instead of
+  hanging, until the endpoint exists. `request()` always sends the body as
+  bytes, because `fetch` adds `text/plain` to a string body, which would make
+  the "missing `Content-Type`" test send a Content-Type. `assertProblem()` also
+  checks `WWW-Authenticate` on 401 and `Allow` on 405, so no test can forget
+  them.
+- Changed: the assistant first left held `beforeCreate` requests pending when
+  the app closed; it changed `close()` to release every hold.
+- Rejected: stubbing `createApp` in `src/` so the tests would run green before
+  Tín's endpoint lands; `src/` is Tín's, and the plan expects the tests to fail
+  until then.
+- Evidence: the pull request that adds `test/contract/`.

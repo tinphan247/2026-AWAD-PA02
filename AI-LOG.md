@@ -184,3 +184,25 @@
 - Rejected: keeping a reservation after a 400/413/415/422/500 so the same key
   would be blocked; contract §6 says only a 201 is stored, so the key is freed.
 - Evidence: the pull request from `feat/submissions-endpoint`.
+
+## 2026-11-10 — TA-n — OpenCode (DeepSeek V4.1 Flash Free): idempotency tests
+
+- Task: write `test/contract/submissions.idempotency.test.js` from contract §6
+  on branch `test/idempotency`, taken from merged `main` (`59e058e`).
+- Tool/model: OpenCode, DeepSeek V4.1 Flash Free. No test calls a model.
+- Result: 23 cases covering same-request replay (identical stored body and
+  `Idempotent-Replayed: true`, no new submission), canonical JSON equality,
+  exact key comparison, different keys, per-student key scope, 422 for a
+  different body or lab, 422 for a changed ignored field, 409 while the first
+  request is held in `beforeCreate`, reuse of a key after 400/401/403/404/409/
+  413/415/500, replay still subject to steps 2 and 9, and the 24 hour lifetime.
+  `npm test` passes 94/94; lint, format and typecheck pass.
+- Changed: the first draft asserted that `" exact-key"` is a different key from
+  `"exact-key"`. HTTP strips leading whitespace from header values before the
+  server sees them, so the test now uses an internal space, which still proves
+  the server does not trim the key.
+- Rejected: asserting server behaviour beyond the promised 24 hour minimum
+  (e.g. that a key is forgotten at 24 hours + 1 ms); the contract promises
+  retention, not expiry, so only the "still replays at 24 hours" case is
+  checked.
+- Evidence: the pull request from `test/idempotency`.

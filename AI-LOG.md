@@ -206,3 +206,17 @@
   retention, not expiry, so only the "still replays at 24 hours" case is
   checked.
 - Evidence: the pull request from `test/idempotency`.
+
+## 2026-11-10 — TA-n — OpenCode (DeepSeek V4.1 Flash Free): idempotency follow-up
+
+- Task: address the three optional suggestions Tuệ left on PR #5, on branch
+  `test/idempotency-followup` from merged `main` (`09280f7`).
+- Tool/model: OpenCode, DeepSeek V4.1 Flash Free. No test calls a model.
+- Result: three more cases — a reused key with an invalid body is `422`, not
+  `400` (step 10 before step 11); a replay with the same key in a lab of
+  another class is `403` (step 9 before step 10); and a first request that
+  fails after being held releases the in-flight key, so a third request with
+  that key creates. The third suggestion did not find a bug: the
+  implementation already releases the reservation in its create failure path.
+- Result (checks): `npm test` passes 97/97; lint, format and typecheck pass.
+- Evidence: the follow-up pull request from `test/idempotency-followup`.

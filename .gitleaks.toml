@@ -1,0 +1,13 @@
+# Gitleaks configuration.
+#
+# The frozen contract contains an example Idempotency-Key, a random UUID, in a
+# curl command and in the replay example. The generic-api-key rule sees its
+# entropy as a credential. It is a documented placeholder, not a secret: the
+# server never accepts a real credential through that header.
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Example Idempotency-Key in docs/contract/post-labs-labId-submissions.md"
+regexTarget = "match"
+regexes = ['''5b1c0f7e-9a7d-4c1e-8f53-2f6a1d0c9b11''']

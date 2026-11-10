@@ -220,3 +220,22 @@
   implementation already releases the reservation in its create failure path.
 - Result (checks): `npm test` passes 97/97; lint, format and typecheck pass.
 - Evidence: the follow-up pull request from `test/idempotency-followup`.
+
+## 2026-11-10 — TA-n — OpenCode (DeepSeek V4.1 Flash Free): release documents
+
+- Task: prepare Tín's W9 release work — `PA2.md`, the self-assessment report,
+  the README status and layout, and a current-status block in
+  `PA2_PROGRESS.md`.
+- Tool/model: OpenCode, DeepSeek V4.1 Flash Free.
+- Result: `PA2.md` links the repository, the branch-protection evidence, the
+  blocked PR #6, the commit and run that turned it green, the tag run page and
+  the deliberate-break evidence. `SELF_ASSESSMENT_REPORT.md` has one row per
+  rubric criterion, a claimed total of 95 and a "what we did not manage"
+  section, including the missing provider-side spending-cap screenshot.
+- Changed: the README still described PA#2 as a skeleton waiting for the
+  endpoint contract; it now records the completed endpoint and the new source
+  layout.
+- Rejected: claiming 100/100. The provider-side cap evidence is not in the
+  repository, and the first deliberate break was caught by the idempotency
+  suite rather than the success/error suite; both facts are in the report.
+- Evidence: the pull request from `docs/pa2-release`.

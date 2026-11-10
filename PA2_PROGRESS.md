@@ -7,6 +7,32 @@
 **Merge gần nhất:** `c677c0a` — PR #1 (rules + security baseline)  
 **CI run đầu tiên:** [run #1 — success](https://github.com/tinphan247/2026-AWAD-PA02/actions/runs/42266378686)
 
+---
+
+## 0. Cập nhật cuối — 10/11/2026
+
+Các mục ở dưới được giữ làm lịch sử; bảng này là trạng thái thực tế.
+
+| Hạng mục | Trạng thái | Bằng chứng |
+|---|---|---|
+| Toolchain + 4 lệnh | `DONE` | `main` xanh qua run #23 |
+| Rules + permissions + `.env.example` | `DONE` | PR #1 merged `c677c0a` |
+| Branch protection + evidence | `DONE` | PR #2 merged; ruleset `26715397` |
+| Contract endpoint | `DONE` | PR #3 merged `b59e804` |
+| Endpoint implementation | `DONE` | PR #4 merged `59e058e` |
+| Success/error contract tests | `DONE` | PR #4, 69 case |
+| Idempotency tests | `DONE` | PR #5 + PR #7 merged |
+| Auth/ownership tests | `IN REVIEW` | PR #8, CI run #25 xanh, Tuệ approved |
+| Deliberate contract break | `IN REVIEW` | PR #6, đỏ ở `5fbc56e` (run #20), xanh ở `9924b2d` (run #26) |
+| `PA2.md` + self-assessment | `IN REVIEW` | nhánh `docs/pa2-release` |
+| Secret scan trên commit cuối | `NEXT` | chạy lại sau khi merge PR #6/#8 |
+| Tag `pa2` + CI run cho tag | `NEXT` | sau khi `main` cuối cùng ổn định |
+| Zip + nộp bài | `NEXT` | `23120372-23120398-23120399_95.zip` |
+
+**Còn chặn:** cần Tín approve/merge PR #8 và PR #6, sau đó merge PR tài liệu.
+
+---
+
 **Ký hiệu trạng thái:**
 
 - `DONE` — đã xong, có bằng chứng trong repo

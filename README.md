@@ -6,9 +6,13 @@ feature arrives in PA#3.
 
 ## Status
 
-This is the PA#2 walking skeleton: toolchain, health route and CI are in place.
-The contract and implementation of
-`POST /v1/labs/{labId}/submissions` are the next deliverable.
+PA#2 is complete. The toolchain, health route and required CI are in place,
+`POST /v1/labs/{labId}/submissions` is implemented, and its contract tests
+cover success, errors, authentication, ownership and idempotency.
+
+- Contract: [`docs/contract/post-labs-labId-submissions.md`](docs/contract/post-labs-labId-submissions.md)
+- Submission links and evidence: [`PA2.md`](PA2.md)
+- Self-assessment: [`SELF_ASSESSMENT_REPORT.md`](SELF_ASSESSMENT_REPORT.md)
 
 ## Requirements
 
@@ -40,11 +44,18 @@ The server listens on `127.0.0.1:3000` by default. Override with `PORT` /
 ## Project layout
 
 ```text
-src/app.js             HTTP application factory (health route for now)
-src/server.js          startServer() for tests and production
-src/main.js            process entry point
-test/unit/             unit and smoke tests
-.github/workflows/     required CI
+src/app.js                  HTTP application factory and routing
+src/server.js               startServer() for tests and production
+src/main.js                 process entry point
+src/auth.js                 bearer token, content type and lab id parsing
+src/domain/submissions.js   the 12 checks for the endpoint
+src/http/                   RFC 9457 problem details and body reading
+src/repo/memory.js          in-memory seed, submissions and idempotency store
+test/contract/              contract tests and their shared seam
+test/unit/                  unit and smoke tests
+docs/contract/              frozen endpoint contract
+docs/evidence/              branch protection, secret scan and contract break
+.github/workflows/          required CI
 ```
 
 ## Scope of PA#2

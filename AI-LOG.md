@@ -229,9 +229,10 @@
 - Tool/model: OpenCode, DeepSeek V4.1 Flash Free.
 - Result: `PA2.md` links the repository, the branch-protection evidence, the
   blocked PR #6, the commit and run that turned it green, the tag run page and
-  the deliberate-break evidence. `SELF_ASSESSMENT_REPORT.md` has one row per
-  rubric criterion, a claimed total of 95 and a "what we did not manage"
-  section, including the missing provider-side spending-cap screenshot.
+  the deliberate-break evidence. The first self-assessment draft had one row
+  per rubric criterion, a claimed total of 95 and a "what we did not manage"
+  section. Tuệ's more detailed draft was merged into the same release branch;
+  the team agreed the final total after the release evidence existed.
 - Changed: the README still described PA#2 as a skeleton waiting for the
   endpoint contract; it now records the completed endpoint and the new source
   layout.
@@ -239,3 +240,45 @@
   repository, and the first deliberate break was caught by the idempotency
   suite rather than the success/error suite; both facts are in the report.
 - Evidence: the pull request from `docs/pa2-release`.
+
+## 2026-11-10 — Tuệ — Claude Code (Claude Sonnet 5.5, then Claude Opus 5.5): PR #5 review and deliberate contract break
+
+- Task: review PR #5 against contract §6 only, then break the contract on
+  purpose in `src/` to show that CI blocks the merge.
+- Tool/model: Claude Code in VS Code, Claude Sonnet 5.5 for the review and
+  Claude Opus 5.5 for the break. No test calls a model.
+- Prompts (verbatim): "read the PR now … and validate the review"; "ok move to
+  D section and E section"; "open the PR now".
+- Result (review): every §6 rule has a test in PR #5, the diff adds tests only,
+  and 94/94 pass on the PR head. Two scratch tests, never committed, confirmed
+  that the server already returns 422 before validation (step 10 before 11) and
+  403 before a replay (step 9 before 10). Tín then asserted both in PR #7.
+- Result (break): on `test/contract-break` the step 9 enrollment check was
+  removed from `src/domain/submissions.js`, with no test changed. CI went red
+  with 92 pass and 2 fail, and the merge was blocked:
+  [PR #6](https://github.com/tinphan247/2026-AWAD-PA02/pull/6),
+  [red run](https://github.com/tinphan247/2026-AWAD-PA02/actions/runs/42780786873/job/129710055163),
+  `docs/evidence/ci-pullrequest-6.png` and
+  `docs/evidence/ci-github_agent_error-6.png`, explained in
+  [`docs/evidence/contract-break.md`](docs/evidence/contract-break.md).
+- Caught by: `contract §6 — a replay is still checked against step 9:
+  unenrolled after the 201 → 403, nothing new` and `contract §6 — a 403 (not
+  the owner) stores nothing: the same key accepts a lab of the caller`.
+- Finding: only those two idempotency tests caught the break. No test in
+  `submissions.success-errors.test.js` asserts `403 forbidden` for step 3 (a TA)
+  or step 9 (not enrolled), although `helpers.js` seeds `TOKENS.TA` and
+  `TOKENS.S3` for it. Without PR #5 this break would have merged green. Also,
+  the PR #5 entry above lists reuse after a 409, but no such test exists.
+- Follow-up: Tùng's PR #8 added `submissions.auth-ownership.test.js`. With it
+  on `main` (`16dbe72`), the same break applied to a scratch copy, never
+  committed, fails 7 tests instead of 2, four of them direct ownership tests:
+  `contract §3 student without enrollment`, `contract §3 student enrolled in
+  another class`, `contract §3 body identity grants no enrollment` and
+  `contract §5.4 ownership before field validation`.
+- Fix: the break commit is reverted on the same branch, so `src/` is identical
+  to `main` again; the four checks pass, with 94/94 tests before PR #7, 97/97
+  after PR #7 and 118/118 after PR #8 were merged into the branch.
+- Evidence (after the fix): `docs/evidence/ci-after_commit_fix.png` shows the
+  PR #6 commit list with `5fbc56e` red and every later commit green.
+- Rejected: editing a test to make the break pass, or weakening the required
+  check; both are forbidden by `AGENTS.md`.

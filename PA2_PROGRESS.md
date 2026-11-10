@@ -22,14 +22,15 @@ Các mục ở dưới được giữ làm lịch sử; bảng này là trạng 
 | Endpoint implementation | `DONE` | PR #4 merged `59e058e` |
 | Success/error contract tests | `DONE` | PR #4, 69 case |
 | Idempotency tests | `DONE` | PR #5 + PR #7 merged |
-| Auth/ownership tests | `IN REVIEW` | PR #8, CI run #25 xanh, Tuệ approved |
-| Deliberate contract break | `IN REVIEW` | PR #6, đỏ ở `5fbc56e` (run #20), xanh ở `9924b2d` (run #26) |
-| `PA2.md` + self-assessment | `IN REVIEW` | nhánh `docs/pa2-release` |
-| Secret scan trên commit cuối | `NEXT` | chạy lại sau khi merge PR #6/#8 |
+| Auth/ownership tests | `DONE` | PR #8 merged `16dbe72`, 21 case |
+| Deliberate contract break | `DONE` | PR #6 merged `3067730`; đỏ ở `5fbc56e` (run #20), xanh ở `23184b5` (run #28) |
+| `PA2.md` + self-assessment | `IN REVIEW` | nhánh `docs/pa2-release`, tổng chốt 97 |
+| Secret scan trên commit cuối | `DONE` | `.gitleaks.toml`, `docs/evidence/secret-scan.txt` — 32 commit, 0 leak |
+| Fresh-clone verification trên `main` cuối | `NEXT` | sau khi merge PR tài liệu |
 | Tag `pa2` + CI run cho tag | `NEXT` | sau khi `main` cuối cùng ổn định |
-| Zip + nộp bài | `NEXT` | `23120372-23120398-23120399_95.zip` |
+| Zip + nộp bài | `NEXT` | `23120372-23120398-23120399_97.zip` |
 
-**Còn chặn:** cần Tín approve/merge PR #8 và PR #6, sau đó merge PR tài liệu.
+**Còn chặn:** mở + merge PR tài liệu `docs/pa2-release`, sau đó tag và đóng zip.
 
 ---
 

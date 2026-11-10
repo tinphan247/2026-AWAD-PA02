@@ -3,29 +3,40 @@
 Team: Phan Trung Tín (23120372), Minh Tuệ (23120398), Nguyễn Sơn Tùng
 (23120399).
 
-Claimed total: **95 / 100**. The file name is
-`23120372-23120398-23120399_95.zip`.
+Repository: https://github.com/tinphan247/2026-AWAD-PA02
 
-| # | Criterion | Claimed | Evidence | What we did not manage |
-| --- | --- | ---: | --- | --- |
-| 1 | Rules file | 14 / 15 | `AGENTS.md` has the four sections, three permission tiers and a product-specific never list. Two never lines have a trace: the ESLint 10 rejection and the unused-import lint failure, both linked to `AI-LOG.md` and commit `8c5cad5`. Adapters: `CLAUDE.md`, `.cursor/rules/000-project.mdc`, `.github/copilot-instructions.md`. Reviewed in [PR #1](https://github.com/tinphan247/2026-AWAD-PA02/pull/1). | One point held back because the rules were written mostly by one member and only reviewed by the other two; the two traced stories are real but both are tooling incidents rather than product incidents. |
-| 2 | Permissions and secrets | 9 / 10 | `AGENTS.md` states allowed / ask first / never. `.env.example` lists `PORT`, `HOST`, `MODEL_*` and `DATABASE_PATH` without values. Gitleaks 8.30.1 scanned the full history with no leaks, recorded in `docs/evidence/secret-scan.txt`. `README.md` says the model API spending cap is USD 0 and no key is used in PA#2. | The provider-side cap screenshot is not in the repository. PA#2 makes no model call, so there is no key to configure yet; the account owner records that evidence before the first PA#3 call. |
-| 3 | One command for every check | 10 / 10 | `package.json` has `lint`, `format:check`, `typecheck` and `test`. `.github/workflows/ci.yml` runs `npm ci` then exactly those four commands on Node 24 from `.nvmrc`. `README.md` documents the same commands. CI runs: [run 42783043055](https://github.com/tinphan247/2026-AWAD-PA02/actions/runs/42783043055). | None. |
-| 4 | CI that blocks a merge | 20 / 20 | Ruleset `protect-main` (`26715397`) requires a PR, one approval, the `ci` check and an up-to-date branch, with no bypass. Evidence: `docs/evidence/branch-protection-1.png`, `branch-protection-2.png`, `branch-protection-api.json`. [PR #6](https://github.com/tinphan247/2026-AWAD-PA02/pull/6) was blocked at commit `5fbc56e` by the red required check ([run 42780786873](https://github.com/tinphan247/2026-AWAD-PA02/actions/runs/42780786873)); commit `75bd4aa` turned it green ([run 42781613985](https://github.com/tinphan247/2026-AWAD-PA02/actions/runs/42781613985)). `docs/evidence/push-blocked.txt` records a direct push refused on `main`. | None. |
-| 5 | The contract of one endpoint | 23 / 25 | `docs/contract/post-labs-labId-submissions.md` covers conventions, all 12 RFC 9457 problem types with status and title, roles and the ownership rule, request and response fields, the 12-step check order, idempotency, paging marked not applicable, the change policy with `Deprecation` / `Sunset`, examples and security notes. Frozen and merged in [PR #3](https://github.com/tinphan247/2026-AWAD-PA02/pull/3). | Two points held back for calibration: the contract does not define a read endpoint, and the `detail` sentences outside the fixed 500 one are examples rather than contract. |
-| 6 | Contract tests that bite | 14 / 15 | `test/contract/` contains the shared seam, success/error, idempotency and auth/ownership tests, named after contract sections. They run in the required `ci` job. The deliberate break in [PR #6](https://github.com/tinphan247/2026-AWAD-PA02/pull/6) failed two tests and blocked the merge; the fix changed only `src/`. Evidence: `docs/evidence/contract-break.md`. | One point held back because the first red run was caught by two idempotency tests rather than by the success/error file; the auth/ownership file was added afterwards in [PR #8](https://github.com/tinphan247/2026-AWAD-PA02/pull/8). |
-| 7 | AI-LOG.md | 5 / 5 | `AI-LOG.md` records the tool and model for each part, the prompts used, the changed files, the rejected proposals and the decisions under review. It covers the rules, contract, implementation, idempotency tests and the contract break. It is linked from the rules file and the PRs. | None. |
-| | **Total** | **95 / 100** | | |
+Claimed total: **97 / 100**. The file name is
+`23120372-23120398-23120399_97.zip`.
+
+| # | Criterion | Max | Self-score | Evidence |
+| - | --------- | --: | ---------: | -------- |
+| 1 | Rules file | 15 | 14 | [`AGENTS.md`](AGENTS.md) has the four parts: Stack, Commands, Conventions, Never. Two Never lines trace to real incidents recorded in AI-LOG, both in commit `8c5cad5`: [the ESLint 10 rejection](AI-LOG.md#eslint-10-upgrade) and [the unused import in the HTTP app](AI-LOG.md#unused-import-in-the-http-app). `CLAUDE.md` points to `AGENTS.md`; the Cursor and Copilot adapters do the same. Reviewed in [PR #1](https://github.com/tinphan247/2026-AWAD-PA02/pull/1). |
+| 2 | Permissions and secrets | 10 | 10 | Allowed, ask-first and never tiers are in [`AGENTS.md`](AGENTS.md). [`.env.example`](.env.example) lists every variable with no values. The [README](README.md) states the spending cap of USD 0. [Gitleaks scan of the full history](docs/evidence/secret-scan.txt) on the release commit found no leaks. |
+| 3 | One command per check | 10 | 10 | `npm run lint`, `npm run format:check`, `npm run typecheck` and `npm test`. [`ci.yml`](.github/workflows/ci.yml) runs exactly these four after `npm ci`, with no `continue-on-error` or `\|\| true`. The fresh-clone check on the release commit is recorded in [`docs/evidence/fresh-clone.txt`](docs/evidence/fresh-clone.txt). |
+| 4 | CI that blocks a merge | 20 | 20 | Ruleset `protect-main` has been active since 2026-11-07 01:22 (+07:00). It requires a PR, one approval and the `ci` check, requires an up-to-date branch, blocks force-push and deletion, and has 0 bypass actors: [screenshot 1](docs/evidence/branch-protection-1.png), [screenshot 2](docs/evidence/branch-protection-2.png), [API dump](docs/evidence/branch-protection-api.json). [A direct push is rejected](docs/evidence/push-blocked.txt). The last direct commit on `main` (`ac91a69`, 01:20) predates the ruleset, and every change since came through a PR. [PR #6](https://github.com/tinphan247/2026-AWAD-PA02/pull/6) was blocked by a [red `ci` run](https://github.com/tinphan247/2026-AWAD-PA02/actions/runs/42780786873/job/129710055163) ([screenshot](docs/evidence/ci-pullrequest-6.png)), and commit `75bd4aa` turned it [green](https://github.com/tinphan247/2026-AWAD-PA02/actions/runs/42781613985/job/129712745826) ([screenshot](docs/evidence/ci-after_commit_fix.png)). Tag `pa2` triggers the same workflow; the run for the tag is the newest entry in <https://github.com/tinphan247/2026-AWAD-PA02/actions/workflows/ci.yml?query=event%3Apush+branch%3Apa2>. |
+| 5 | Endpoint contract | 25 | 23 | [`docs/contract/post-labs-labId-submissions.md`](docs/contract/post-labs-labId-submissions.md) covers conventions, the 12 RFC 9457 error types with status and when each occurs, authentication and ownership, field rules, a 12-step check order, idempotency (scope, fingerprint, replay, reused, in flight, only a 201 stored, lifetime), paging (N/A), change policy, examples, and security and privacy. It was frozen in PR #3 before any endpoint code was written, and PR #4 implements it. |
+| 6 | Contract tests that bite | 15 | 15 | Three contract test files, 116 contract tests (118 with the health-route tests), all run by the required `ci` check: [`submissions.success-errors.test.js`](test/contract/submissions.success-errors.test.js), [`submissions.idempotency.test.js`](test/contract/submissions.idempotency.test.js) and [`submissions.auth-ownership.test.js`](test/contract/submissions.auth-ownership.test.js). Each of the 12 error types in the contract has at least one test. They assert body shape, headers (`WWW-Authenticate`, `Allow`, `Idempotent-Replayed`), problem details, the JSON Pointers of validation errors, ownership (TA, admin, unenrolled, other class, identity from the token), the check order, idempotency, and submission counts. The deliberate break in [PR #6](https://github.com/tinphan247/2026-AWAD-PA02/pull/6) removed the step 9 enrollment check from `src/` only and turned CI red ([run](https://github.com/tinphan247/2026-AWAD-PA02/actions/runs/42780786873/job/129710055163), [explained](docs/evidence/contract-break.md)). When the break ran, the two tests that caught it were idempotency tests that check step 9; the direct ownership tests landed afterwards in PR #8 and would catch the same break seven times over (see "What we did not manage"). |
+| 7 | AI-LOG.md | 5 | 5 | [`AI-LOG.md`](AI-LOG.md) has an entry for each assistant session, with the tool and model, prompts and real Changed and Rejected items. Examples: ESLint 10 rejected over audit findings; a test changed because HTTP strips leading header whitespace; a stub in `src/` rejected so that tests stayed red until the endpoint landed; a self-assessment draft corrected for two unverified claims. |
+|   | **Total** | **100** | **97** | |
 
 ## What we did not manage
 
-- We did not have a provider-side screenshot of the model spending cap. PA#2
-  makes no model call, so this is deferred to PA#3 as the README explains.
-- The server uses an in-memory repository with fixed seeded tokens. There is
-  no database, queue, grader or deployment; those are outside PA#2.
-- We did not build a separate external client to consume the contract. The
-  contract examples and the contract tests are the evidence that a stranger
-  could write one.
-- The first deliberate-break run was caught by the idempotency suite, not by
-  the success/error suite. We kept that fact in the evidence and added the
-  missing auth/ownership tests in PR #8 instead of hiding the gap.
+- **The deliberate break was first caught only indirectly.** When PR #6 ran,
+  the two tests that went red were idempotency tests that happen to check
+  step 9, because the planned auth and ownership test file had not been written
+  yet. PR #8 added it afterwards. Re-running the same break on a scratch copy
+  of `main` at `16dbe72` now fails 7 tests, four of them direct ownership tests
+  ([details](docs/evidence/contract-break.md#the-same-break-after-pr-8)), but
+  that re-run is not a CI run.
+- **No AI-LOG entry for PR #8.** If an assistant helped write
+  `submissions.auth-ownership.test.js`, its entry is still missing. The PR
+  was also commented on by GitHub's Copilot reviewer.
+- **No provider-side spending-cap screenshot.** PA#2 makes no model call, so
+  there is no key to configure yet. The account owner records that evidence
+  before the first PA#3 call, as the README says.
+- **Small AI-LOG inaccuracy.** The PR #5 entry lists reuse of a key after a
+  409, but the test for that exact sequence was added in PR #7 as part of the
+  in-flight-then-failure case.
+- The first self-assessment draft by Tín proposed 95. The team adopted Tuệ's
+  more detailed draft and raised rows 2, 3 and 4 only after the release
+  evidence existed, which gives the claimed 97.

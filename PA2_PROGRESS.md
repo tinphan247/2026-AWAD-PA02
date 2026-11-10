@@ -7,6 +7,33 @@
 **Merge gần nhất:** `c677c0a` — PR #1 (rules + security baseline)  
 **CI run đầu tiên:** [run #1 — success](https://github.com/tinphan247/2026-AWAD-PA02/actions/runs/42266378686)
 
+---
+
+## 0. Cập nhật cuối — 10/11/2026
+
+Các mục ở dưới được giữ làm lịch sử; bảng này là trạng thái thực tế.
+
+| Hạng mục | Trạng thái | Bằng chứng |
+|---|---|---|
+| Toolchain + 4 lệnh | `DONE` | `main` xanh qua run #23 |
+| Rules + permissions + `.env.example` | `DONE` | PR #1 merged `c677c0a` |
+| Branch protection + evidence | `DONE` | PR #2 merged; ruleset `26715397` |
+| Contract endpoint | `DONE` | PR #3 merged `b59e804` |
+| Endpoint implementation | `DONE` | PR #4 merged `59e058e` |
+| Success/error contract tests | `DONE` | PR #4, 69 case |
+| Idempotency tests | `DONE` | PR #5 + PR #7 merged |
+| Auth/ownership tests | `DONE` | PR #8 merged `16dbe72`, 21 case |
+| Deliberate contract break | `DONE` | PR #6 merged `3067730`; đỏ ở `5fbc56e` (run #20), xanh ở `23184b5` (run #28) |
+| `PA2.md` + self-assessment | `IN REVIEW` | nhánh `docs/pa2-release`, tổng chốt 97 |
+| Secret scan trên commit cuối | `DONE` | `.gitleaks.toml`, `docs/evidence/secret-scan.txt` — 32 commit, 0 leak |
+| Fresh-clone verification trên `main` cuối | `DONE` | `docs/evidence/fresh-clone.txt` — commit `e34a84a`, 4 lệnh xanh |
+| Tag `pa2` + CI run cho tag | `NEXT` | sau khi `main` cuối cùng ổn định |
+| Zip + nộp bài | `NEXT` | `23120372-23120398-23120399_97.zip` |
+
+**Còn chặn:** mở + merge PR tài liệu `docs/pa2-release`, sau đó tag và đóng zip.
+
+---
+
 **Ký hiệu trạng thái:**
 
 - `DONE` — đã xong, có bằng chứng trong repo

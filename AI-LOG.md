@@ -221,6 +221,31 @@
 - Result (checks): `npm test` passes 97/97; lint, format and typecheck pass.
 - Evidence: the follow-up pull request from `test/idempotency-followup`.
 
+## 2026-11-10 — TA-n — OpenCode (DeepSeek V4.1 Flash Free): release documents
+
+- Task: prepare Tín's W9 release work — `PA2.md`, the self-assessment report,
+  the README status and layout, and a current-status block in
+  `PA2_PROGRESS.md`.
+- Tool/model: OpenCode, DeepSeek V4.1 Flash Free.
+- Result: `PA2.md` links the repository, the branch-protection evidence, the
+  blocked PR #6, the commit and run that turned it green, the tag run page and
+  the deliberate-break evidence. The first self-assessment draft had one row
+  per rubric criterion, a claimed total of 95 and a "what we did not manage"
+  section. Tuệ's more detailed draft was merged into the same release branch;
+  the team agreed the final total after the release evidence existed.
+- Changed: the README still described PA#2 as a skeleton waiting for the
+  endpoint contract; it now records the completed endpoint and the new source
+  layout.
+- Changed (secret scan): the first full-history scan on the release branch
+  flagged the documented example `Idempotency-Key` UUID in the contract as a
+  generic API key. It is a placeholder, not a credential. `.gitleaks.toml`
+  allowlists that exact UUID with the reason, and both the history and working
+  tree scans then reported no leaks. No other finding was suppressed.
+- Rejected: claiming 100/100. The provider-side cap evidence is not in the
+  repository, and the first deliberate break was caught by the idempotency
+  suite rather than the success/error suite; both facts are in the report.
+- Evidence: the pull request from `docs/pa2-release`.
+
 ## 2026-11-10 — Tuệ — Claude Code (Claude Sonnet 5.5, then Claude Opus 5.5): PR #5 review and deliberate contract break
 
 - Task: review PR #5 against contract §6 only, then break the contract on
@@ -263,11 +288,29 @@
 - Rejected: editing a test to make the break pass, or weakening the required
   check; both are forbidden by `AGENTS.md`.
 
-## 2026-11-10 — Tuệ — Claude Code (Claude Opus 5.5): reviews of PR #7 and PR #8, self-assessment draft, evidence clean-up
+## 2026-11-10 — Tuệ — Claude Code (Claude Opus 5.5): self-assessment draft
+
+- Task: draft `SELF_ASSESSMENT_REPORT.md` with one row per rubric criterion,
+  a self-score, evidence links and a "what we did not manage" section.
+- Tool/model: Claude Code in VS Code, Claude Opus 5.5. No test calls a model.
+- Prompts (verbatim): "ok move to D section and E section"; "#6 at 15".
+- Result: proposed total 93. Rows #2, #3 and #4 stay "pending" until the
+  final secret scan, the fresh-clone check and the tag `pa2` run exist. The
+  total is a draft until the team agrees on it.
+- Changed: the first draft scored #6 at 11 because the contract listed
+  `400 idempotency-key-missing` with no test, and no test asserted a TA 403 or a
+  plain unenrolled 403. After PR #8 closed those gaps, every one of the 12
+  error types has a test, and Tuệ chose 15. The assistant also corrected two
+  unverified claims in its draft: a statement about how PR #4 was written, and
+  a test count that included the non-contract health tests (116 contract tests,
+  not 118).
+- Rejected: claiming the pending rows before their evidence exists.
+
+## 2026-11-10 — Tuệ — Claude Code (Claude Opus 5.5): reviews of PR #7 and PR #8, evidence clean-up
 
 - Task: after the contract break, review Tín's PR #7 and Tùng's PR #8 against
-  the contract, draft the self-assessment, and make the break evidence easy to
-  find.
+  the contract, and make the break evidence easy to find. The
+  self-assessment work of the same session is in the entry above.
 - Tool/model: Claude Code in VS Code, Claude Opus 5.5. No test calls a model.
 - Prompts (verbatim, abridged): "Review again the PR7"; "Tung has merge the
   auth-ownership.test into main with check for edge case 404. check it again,
@@ -284,9 +327,8 @@
   Tùng was asked to add one if an assistant helped.
 - Result (break re-check): the PR #6 `src/` change, applied to a scratch copy
   of `main` at `16dbe72` and never committed, fails 7 tests instead of 2.
-- Result (self-assessment): drafted `SELF_ASSESSMENT_REPORT.md` in PR #9 with
-  a proposed total of 93. Tín's `docs/pa2-release` branch has its own version
-  at 95; the team must pick one file and agree the total for the zip name.
+- Result (self-assessment): the draft from PR #9 was folded into Tín's
+  release PR #11, which merged with a claimed total of 97; PR #9 was closed.
 - Result (evidence): `docs/evidence/contract-break.md` now opens with three
   links that show the red check of the break commit `5fbc56e` (the PR #6
   Commits tab, the commit, and the red job log), after Tuệ could not find it on
@@ -296,10 +338,6 @@
   `validation` and `unauthorized` assertions in the success/error file. That was
   wrong: the file uses `assertValidation()`. A recount found the real gap,
   `400 idempotency-key-missing` with no test, which PR #8 then closed.
-- Changed: the self-assessment first scored #6 at 11 because of those gaps,
-  then 14 after PR #8; Tuệ chose 15. The draft also had two unverified claims,
-  about how PR #4 was written and a test count that included the non-contract
-  health tests (116 contract tests, not 118); both were corrected.
 - Changed: one CI wait read the previous commit's green run as the new one; the
   assistant caught it and waited for the run on the new head.
 - Changed: at Tuệ's request, the "Generated with Claude Code" line was removed
@@ -307,8 +345,6 @@
   here.
 - Rejected: opening a second break PR only to show a red check on a PR's front
   page; the existing red run is already recorded and linked.
-- Rejected: claiming the pending self-assessment rows (#2, #3, #4) before the
-  final secret scan, fresh-clone check and tag run exist.
 - Rejected: rewriting merged history to remove `Co-Authored-By` trailers;
   `AGENTS.md` forbids rewriting history without asking, and protection blocks
   force-pushes to `main`.

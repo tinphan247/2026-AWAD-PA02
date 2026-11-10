@@ -98,6 +98,19 @@ describe('replay (§6)', () => {
     assert.equal(app.submissionCount(), 1);
   });
 
+  test('contract §6 — a replay is still checked against step 9: the same key in a lab of another class → 403, nothing new', async () => {
+    const key = 'replay-in-other-class-lab';
+    await assertSubmission(await request(app.baseUrl, { idempotencyKey: key }), {
+      labId: LABS.A1,
+      studentId: USERS.S1.id,
+    });
+
+    const retry = await request(app.baseUrl, { idempotencyKey: key, labId: LABS.B1 });
+
+    await assertProblem(retry, PROBLEMS.forbidden);
+    assert.equal(app.submissionCount(), 1);
+  });
+
   test('contract §6 — a replay is still checked against step 9: unenrolled after the 201 → 403, nothing new', async () => {
     const key = 'replay-after-unenroll';
     await assertSubmission(await request(app.baseUrl, { idempotencyKey: key }), {
@@ -238,6 +251,22 @@ describe('reused key (§6, 422)', () => {
     assert.equal(app.submissionCount(), 1);
   });
 
+  test('contract §6, §5.4 order — same key with an invalid body → 422, not 400 (step 10 before step 11)', async () => {
+    const key = 'reused-invalid-body';
+    await assertSubmission(await request(app.baseUrl, { idempotencyKey: key }), {
+      labId: LABS.A1,
+      studentId: USERS.S1.id,
+    });
+
+    const reused = await request(app.baseUrl, {
+      idempotencyKey: key,
+      body: { sourceCode: '   ' },
+    });
+
+    await assertProblem(reused, PROBLEMS.keyReused);
+    assert.equal(app.submissionCount(), 1);
+  });
+
   test('contract §6 — a 422 keeps the original stored response: the original body still replays', async () => {
     const key = 'reused-then-original';
     const original = await assertSubmission(
@@ -300,6 +329,26 @@ describe('in flight (§6, 409)', () => {
       studentId: USERS.S1.id,
     });
     assert.equal(replayed.id, created.id);
+  });
+
+  test('contract §6 — a failed first request releases the in-flight key: a third request with the same key creates', async () => {
+    const key = 'in-flight-then-failure';
+    const hold = app.holdNextCreate();
+    const first = request(app.baseUrl, { idempotencyKey: key });
+
+    await hold.reached;
+    await assertProblem(await request(app.baseUrl, { idempotencyKey: key }), PROBLEMS.inFlight);
+
+    app.failNextCreate();
+    hold.release();
+    await assertProblem(await first, PROBLEMS.internal);
+    assert.equal(app.submissionCount(), 0);
+
+    const third = await request(app.baseUrl, { idempotencyKey: key });
+
+    assert.equal(third.headers.get('idempotent-replayed'), null);
+    await assertSubmission(third, { labId: LABS.A1, studentId: USERS.S1.id });
+    assert.equal(app.submissionCount(), 1);
   });
 
   test('contract §6 — in flight wins over fingerprint: a different body with the same key while in flight → 409', async () => {

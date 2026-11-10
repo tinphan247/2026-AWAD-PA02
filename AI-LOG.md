@@ -263,16 +263,55 @@
 - Rejected: editing a test to make the break pass, or weakening the required
   check; both are forbidden by `AGENTS.md`.
 
-## 2026-11-10 — Tuệ — Claude Code (Claude Opus 5.5): make the red check findable
+## 2026-11-10 — Tuệ — Claude Code (Claude Opus 5.5): reviews of PR #7 and PR #8, self-assessment draft, evidence clean-up
 
-- Task: after PR #6 merged, its page showed only the green checks of its last
-  commit, and the red check on the break commit was hard to find.
+- Task: after the contract break, review Tín's PR #7 and Tùng's PR #8 against
+  the contract, draft the self-assessment, and make the break evidence easy to
+  find.
 - Tool/model: Claude Code in VS Code, Claude Opus 5.5. No test calls a model.
-- Prompt (verbatim): "ok make it easy for graders to find".
-- Result: `docs/evidence/contract-break.md` now opens with three direct links
-  that show the red result: the PR #6 Commits tab, commit `5fbc56e`, and the
-  red job log. The assistant first confirmed through the GitHub API that
-  `5fbc56e` is in `main`'s history and that its `ci` check is still recorded as
-  a failure.
-- Rejected: opening a second break PR only to make a red check visible on a
-  PR's front page; the existing red run is already recorded and linked.
+- Prompts (verbatim, abridged): "Review again the PR7"; "Tung has merge the
+  auth-ownership.test into main with check for edge case 404. check it again,
+  pull and update plan"; "#6 at 15"; "ok make it easy for graders to find";
+  "remove the claude from the pull request message".
+- Result (PR #7 review): adds three tests and nothing else; each matches
+  §5.4 and §6 (422 before validation, 403 before a replay, an in-flight key
+  released after a failed create). The approval was on the head commit
+  `1417fe7`. Nit: its AI-LOG entry has no Changed or Rejected item.
+- Result (PR #8 review): adds `submissions.auth-ownership.test.js` only. Every
+  expectation traces to the contract, including that a query string is
+  ignored (§1 and §3). With it, each of the 12 error types in the contract has
+  at least one test, and `main` passes 118/118. PR #8 has no AI-LOG entry;
+  Tùng was asked to add one if an assistant helped.
+- Result (break re-check): the PR #6 `src/` change, applied to a scratch copy
+  of `main` at `16dbe72` and never committed, fails 7 tests instead of 2.
+- Result (self-assessment): drafted `SELF_ASSESSMENT_REPORT.md` in PR #9 with
+  a proposed total of 93. Tín's `docs/pa2-release` branch has its own version
+  at 95; the team must pick one file and agree the total for the zip name.
+- Result (evidence): `docs/evidence/contract-break.md` now opens with three
+  links that show the red check of the break commit `5fbc56e` (the PR #6
+  Commits tab, the commit, and the red job log), after Tuệ could not find it on
+  the merged PR's page. The assistant first confirmed through the GitHub API
+  that `5fbc56e` is in `main`'s history and its `ci` check is still a failure.
+- Changed: a first count of problem types per test file showed zero
+  `validation` and `unauthorized` assertions in the success/error file. That was
+  wrong: the file uses `assertValidation()`. A recount found the real gap,
+  `400 idempotency-key-missing` with no test, which PR #8 then closed.
+- Changed: the self-assessment first scored #6 at 11 because of those gaps,
+  then 14 after PR #8; Tuệ chose 15. The draft also had two unverified claims,
+  about how PR #4 was written and a test count that included the non-contract
+  health tests (116 contract tests, not 118); both were corrected.
+- Changed: one CI wait read the previous commit's green run as the new one; the
+  assistant caught it and waited for the run on the new head.
+- Changed: at Tuệ's request, the "Generated with Claude Code" line was removed
+  from the descriptions of PRs #6, #9 and #10. Assistant use stays recorded
+  here.
+- Rejected: opening a second break PR only to show a red check on a PR's front
+  page; the existing red run is already recorded and linked.
+- Rejected: claiming the pending self-assessment rows (#2, #3, #4) before the
+  final secret scan, fresh-clone check and tag run exist.
+- Rejected: rewriting merged history to remove `Co-Authored-By` trailers;
+  `AGENTS.md` forbids rewriting history without asking, and protection blocks
+  force-pushes to `main`.
+- Not verified: the original rubric PDF is not in the workspace, so the advice
+  that the break PR should be fixed and merged rather than left open rests on
+  the team's copies (`PA2_TASKS.md` T3, `PA2_SOLUTION_PLAN.md` §5.4).

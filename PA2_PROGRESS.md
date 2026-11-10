@@ -26,7 +26,7 @@ Các mục ở dưới được giữ làm lịch sử; bảng này là trạng 
 | Deliberate contract break | `DONE` | PR #6 merged `3067730`; đỏ ở `5fbc56e` (run #20), xanh ở `23184b5` (run #28) |
 | `PA2.md` + self-assessment | `IN REVIEW` | nhánh `docs/pa2-release`, tổng chốt 97 |
 | Secret scan trên commit cuối | `DONE` | `.gitleaks.toml`, `docs/evidence/secret-scan.txt` — 32 commit, 0 leak |
-| Fresh-clone verification trên `main` cuối | `NEXT` | sau khi merge PR tài liệu |
+| Fresh-clone verification trên `main` cuối | `DONE` | `docs/evidence/fresh-clone.txt` — commit `e34a84a`, 4 lệnh xanh |
 | Tag `pa2` + CI run cho tag | `NEXT` | sau khi `main` cuối cùng ổn định |
 | Zip + nộp bài | `NEXT` | `23120372-23120398-23120399_97.zip` |
 

@@ -65,7 +65,9 @@ npm test
 
 CI uses Node 24 from [`.nvmrc`](.nvmrc). The suite covers the success path, all
 twelve problem types, the 12-step check order, authentication and ownership,
-and idempotency (`test/contract/`).
+and idempotency (`test/contract/`). A fresh clone of the release branch was
+installed and checked with these same four commands; the result is in
+[`docs/evidence/fresh-clone.txt`](docs/evidence/fresh-clone.txt).
 
 ## Evidence map
 

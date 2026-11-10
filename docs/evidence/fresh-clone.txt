@@ -1,0 +1,18 @@
+Fresh-clone verification — 2026-11-10
+
+Clone:
+  git clone --branch docs/pa2-release https://github.com/tinphan247/2026-AWAD-PA02.git
+  cd 2026-AWAD-PA02
+Commit: e34a84a62c21cbfd901290e3b14bcb385b020d7d
+Local toolchain: Node v25.1.0, npm 11.7.0
+Install: npm ci — 0 vulnerabilities
+
+Commands (same commands as README and .github/workflows/ci.yml):
+  npm run lint          exit 0, no warnings
+  npm run format:check  exit 0, all matched files use Prettier code style
+  npm run typecheck     exit 0, tsc --noEmit
+  npm test              exit 0, 118 tests, 118 pass, 0 fail
+
+CI runs the same four commands on Node 24 from .nvmrc. This local run on Node
+25.1.0 is a second check of the README instructions, not a replacement for the
+tag `pa2` CI run.

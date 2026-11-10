@@ -113,3 +113,74 @@
   Rejected: comparing known fields only, because a field added to v1 later would
   change what a stored key means.
 - Evidence: the pull request that adds the contract.
+
+## 2026-11-10 — Tuệ — Claude Code (Claude Opus 5.5): contract test helpers and success/error tests
+
+- Task: following the team plan, write `test/contract/helpers.js` and
+  `test/contract/submissions.success-errors.test.js` from the frozen contract
+  only, on branch `test/contract-helpers`.
+- Tool/model: Claude Code in VS Code, Claude Opus 5.5. No test calls a model.
+- Prompt (verbatim): "ok i will do my job first, tin is agree with the seams
+  test, follow @PLAN.md create branch test/contract-helpers and create the
+  helpers.js and test/contract/submissions.success-errors.test.js, ask me to
+  make sure you understand the plan"
+- Decisions Tuệ made when asked: branch from `origin/main`; helpers and tests as
+  two commits on one branch; seam shape `createApp({ seed, repo, hooks, clock })`
+  returning `{ handler, testing }`, with the helper owning the seed; commit
+  locally only, no push.
+- Result: the helper is the only file that knows the test seam agreed with Tín.
+  It declares the seam as JSDoc types at the top and casts the skeleton's
+  `createApp` to it. `startApp()` fails with a clear message, instead of
+  hanging, until the endpoint exists. `request()` always sends the body as
+  bytes, because `fetch` adds `text/plain` to a string body, which would make
+  the "missing `Content-Type`" test send a Content-Type. `assertProblem()` also
+  checks `WWW-Authenticate` on 401 and `Allow` on 405, so no test can forget
+  them.
+- Result (tests): 69 tests, each named after its contract section. They cover
+  the 201 shape (`studentId` from the token, unknown fields ignored, no
+  `Location`, exactly one submission stored, source code not echoed), every
+  `sourceCode` and non-object body rule in §5.3, including the byte-not-character
+  64 KiB limit, 415, 413 and `invalid-json`, 404 for each kind of bad `labId` and
+  path, 405 with `Allow: POST`, the injected 500, and the check order between
+  steps 1, 2, 4, 6, 7, 8 and 11. They fail until the endpoint lands; all 69 fail
+  with the "seam not implemented" message and nothing else. Lint, format and
+  typecheck pass.
+- Changed: the assistant first asserted problem details on the unversioned
+  `/labs/{labId}/submissions` path; §2 requires them only for `/v1` paths, so
+  that test now checks the 404 status only.
+- Changed: the assistant first left held `beforeCreate` requests pending when
+  the app closed; it changed `close()` to release every hold.
+- Rejected: stubbing `createApp` in `src/` so the tests would run green before
+  Tín's endpoint lands; `src/` is Tín's, and the plan expects the tests to fail
+  until then.
+- Evidence: the pull request that adds `test/contract/`.
+
+## 2026-11-10 — TA-n — OpenCode (DeepSeek V4.1 Flash Free): submissions endpoint
+
+- Task: implement `POST /v1/labs/{labId}/submissions` against the frozen
+  contract and the test seam in `test/contract/helpers.js`, on branch
+  `feat/submissions-endpoint` taken from `origin/test/contract-helpers`.
+- Tool/model: OpenCode, DeepSeek V4.1 Flash Free. No application code calls a
+  model.
+- Result: `src/http/problem.js` (RFC 9457, all 12 problem types, fixed 500
+  detail, `WWW-Authenticate` on 401 and `Allow: POST` on 405),
+  `src/http/body.js` (128 KiB byte limit, bounded buffering), `src/auth.js`
+  (Bearer parsing with a case-insensitive scheme, expiry, JSON media type,
+  strict `labId`), `src/repo/memory.js` (seed maps, submissions, per-student
+  idempotency records with a 24 hour lifetime, test seams), and
+  `src/domain/submissions.js` (the twelve checks in contract order).
+- Decisions: the key is reserved as in flight at step 10 before validation,
+  then released on any non-201, so a retry after a failed request may reuse it
+  while a concurrent retry gets 409. The seam hook runs after the reservation
+  and validation but before the store. The idempotency fingerprint is canonical
+  JSON of the whole body plus `labId`, so key order and whitespace do not
+  matter and unknown fields do. Route and method are checked before
+  authentication; non-`/v1` paths keep the skeleton's plain 404.
+- Changed: `src/app.js` now returns `{ handler, testing }` and
+  `src/server.js` uses `createApp().handler`. The health route is unchanged.
+- Result (checks): `npm run lint`, `npm run format:check` and
+  `npm run typecheck` pass; `npm test` passes all 71 cases, including the 69
+  contract cases Tuệ wrote, without editing any test.
+- Rejected: keeping a reservation after a 400/413/415/422/500 so the same key
+  would be blocked; contract §6 says only a 201 is stored, so the key is freed.
+- Evidence: the pull request from `feat/submissions-endpoint`.

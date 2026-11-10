@@ -9,7 +9,7 @@ import { createApp } from './app.js';
  * @returns {Promise<{ server: import('node:http').Server, url: string }>}
  */
 export function startServer({ port = 0, host = '127.0.0.1' } = {}) {
-  const server = createServer(createApp());
+  const server = createServer(createApp().handler);
 
   return new Promise((resolve, reject) => {
     server.once('error', reject);

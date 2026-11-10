@@ -136,6 +136,18 @@
   the "missing `Content-Type`" test send a Content-Type. `assertProblem()` also
   checks `WWW-Authenticate` on 401 and `Allow` on 405, so no test can forget
   them.
+- Result (tests): 69 tests, each named after its contract section. They cover
+  the 201 shape (`studentId` from the token, unknown fields ignored, no
+  `Location`, exactly one submission stored, source code not echoed), every
+  `sourceCode` and non-object body rule in §5.3, including the byte-not-character
+  64 KiB limit, 415, 413 and `invalid-json`, 404 for each kind of bad `labId` and
+  path, 405 with `Allow: POST`, the injected 500, and the check order between
+  steps 1, 2, 4, 6, 7, 8 and 11. They fail until the endpoint lands; all 69 fail
+  with the "seam not implemented" message and nothing else. Lint, format and
+  typecheck pass.
+- Changed: the assistant first asserted problem details on the unversioned
+  `/labs/{labId}/submissions` path; §2 requires them only for `/v1` paths, so
+  that test now checks the 404 status only.
 - Changed: the assistant first left held `beforeCreate` requests pending when
   the app closed; it changed `close()` to release every hold.
 - Rejected: stubbing `createApp` in `src/` so the tests would run green before

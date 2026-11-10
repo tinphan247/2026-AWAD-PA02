@@ -239,7 +239,8 @@
   [PR #6](https://github.com/tinphan247/2026-AWAD-PA02/pull/6),
   [red run](https://github.com/tinphan247/2026-AWAD-PA02/actions/runs/42780786873/job/129710055163),
   `docs/evidence/ci-pullrequest-6.png` and
-  `docs/evidence/ci-github_agent_error-6.png`.
+  `docs/evidence/ci-github_agent_error-6.png`, explained in
+  [`docs/evidence/contract-break.md`](docs/evidence/contract-break.md).
 - Caught by: `contract §6 — a replay is still checked against step 9:
   unenrolled after the 201 → 403, nothing new` and `contract §6 — a 403 (not
   the owner) stores nothing: the same key accepts a lab of the caller`.

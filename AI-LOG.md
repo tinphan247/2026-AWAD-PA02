@@ -249,8 +249,16 @@
   or step 9 (not enrolled), although `helpers.js` seeds `TOKENS.TA` and
   `TOKENS.S3` for it. Without PR #5 this break would have merged green. Also,
   the PR #5 entry above lists reuse after a 409, but no such test exists.
+- Follow-up: Tùng's PR #8 added `submissions.auth-ownership.test.js`. With it
+  on `main` (`16dbe72`), the same break applied to a scratch copy, never
+  committed, fails 7 tests instead of 2, four of them direct ownership tests:
+  `contract §3 student without enrollment`, `contract §3 student enrolled in
+  another class`, `contract §3 body identity grants no enrollment` and
+  `contract §5.4 ownership before field validation`.
 - Fix: the break commit is reverted on the same branch, so `src/` is identical
-  to `main` again; the four checks pass, with 94/94 tests before PR #7 and
-  97/97 after `main` was merged into the branch.
+  to `main` again; the four checks pass, with 94/94 tests before PR #7, 97/97
+  after PR #7 and 118/118 after PR #8 were merged into the branch.
+- Evidence (after the fix): `docs/evidence/ci-after_commit_fix.png` shows the
+  PR #6 commit list with `5fbc56e` red and every later commit green.
 - Rejected: editing a test to make the break pass, or weakening the required
   check; both are forbidden by `AGENTS.md`.

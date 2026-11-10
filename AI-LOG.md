@@ -103,4 +103,13 @@
   For prompt 5, the assistant did not copy the raw session transcript into this
   file: it holds a personal email address and full system prompts, and this
   repository is public. This entry records the prompts verbatim instead.
+- Review round (PR review, same session, Claude Sonnet 5.5): a reviewer found
+  two wording defects that the assistant had introduced. Changed: §3 now limits
+  "unauthenticated gets 401" to requests that match the POST route, because
+  route and method are checked first (§5.4 step 1). §6 now says the idempotency
+  comparison covers the whole body, including ignored fields such as
+  `studentId`, so changing one under the same key is `422`. The assistant laid
+  out two options (whole body, or known fields only); Tuệ chose the whole body.
+  Rejected: comparing known fields only, because a field added to v1 later would
+  change what a stored key means.
 - Evidence: the pull request that adds the contract.

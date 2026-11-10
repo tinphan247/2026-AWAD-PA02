@@ -99,8 +99,11 @@ this": a new token for the same user will not help.
 **Lab existence.** An authenticated student who names a lab that does not
 exist gets `404`; one who names a lab of another class gets `403`. This shows
 an authenticated student which lab ids exist. That is accepted, because lab
-ids are not secret. An unauthenticated caller learns nothing: they get `401`
-whether or not the lab exists.
+ids are not secret. An unauthenticated caller learns nothing about labs: a
+request that matches `POST /v1/labs/{labId}/submissions` and has no valid token
+gets `401` whether or not the lab exists. An unknown path or a method other
+than `POST` is answered with `404` or `405` before authentication (§5.4
+step 1).
 
 ## 4. Resources
 
@@ -237,6 +240,9 @@ not create a second submission.
 - **Same request.** Two requests are *the same* when they have the same
   `labId` and their bodies are equal as JSON values. Key order and whitespace
   do not matter; any other difference does, including a different `labId`.
+  The comparison covers the **whole body**, including fields the server
+  otherwise ignores (§5.3), such as `studentId`. Changing an ignored field
+  under the same key is a different request: `422 idempotency-key-reused`.
 - **Different keys** always mean different submissions, even when the bodies
   are identical. The key, not the body, tells a retry from a new attempt.
 - **Stored with the submission.** When step 12 succeeds, the server stores the

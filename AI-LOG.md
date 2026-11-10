@@ -154,3 +154,33 @@
   Tín's endpoint lands; `src/` is Tín's, and the plan expects the tests to fail
   until then.
 - Evidence: the pull request that adds `test/contract/`.
+
+## 2026-11-10 — TA-n — OpenCode (DeepSeek V4.1 Flash Free): submissions endpoint
+
+- Task: implement `POST /v1/labs/{labId}/submissions` against the frozen
+  contract and the test seam in `test/contract/helpers.js`, on branch
+  `feat/submissions-endpoint` taken from `origin/test/contract-helpers`.
+- Tool/model: OpenCode, DeepSeek V4.1 Flash Free. No application code calls a
+  model.
+- Result: `src/http/problem.js` (RFC 9457, all 12 problem types, fixed 500
+  detail, `WWW-Authenticate` on 401 and `Allow: POST` on 405),
+  `src/http/body.js` (128 KiB byte limit, bounded buffering), `src/auth.js`
+  (Bearer parsing with a case-insensitive scheme, expiry, JSON media type,
+  strict `labId`), `src/repo/memory.js` (seed maps, submissions, per-student
+  idempotency records with a 24 hour lifetime, test seams), and
+  `src/domain/submissions.js` (the twelve checks in contract order).
+- Decisions: the key is reserved as in flight at step 10 before validation,
+  then released on any non-201, so a retry after a failed request may reuse it
+  while a concurrent retry gets 409. The seam hook runs after the reservation
+  and validation but before the store. The idempotency fingerprint is canonical
+  JSON of the whole body plus `labId`, so key order and whitespace do not
+  matter and unknown fields do. Route and method are checked before
+  authentication; non-`/v1` paths keep the skeleton's plain 404.
+- Changed: `src/app.js` now returns `{ handler, testing }` and
+  `src/server.js` uses `createApp().handler`. The health route is unchanged.
+- Result (checks): `npm run lint`, `npm run format:check` and
+  `npm run typecheck` pass; `npm test` passes all 71 cases, including the 69
+  contract cases Tuệ wrote, without editing any test.
+- Rejected: keeping a reservation after a 400/413/415/422/500 so the same key
+  would be blocked; contract §6 says only a 201 is stored, so the key is freed.
+- Evidence: the pull request from `feat/submissions-endpoint`.

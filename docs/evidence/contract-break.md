@@ -8,6 +8,21 @@ Contract rule broken: §5.4 step 9 of
 [`docs/contract/post-labs-labId-submissions.md`](../contract/post-labs-labId-submissions.md),
 "the student is not enrolled in the class that owns the lab: `403 forbidden`".
 
+> **Where to see the red check.** PR #6 is merged and its page shows the
+> checks of its last commit, which are green. The red result belongs to the
+> break commit `5fbc56e`. Any of these shows it:
+>
+> 1. [PR #6 → Commits tab](https://github.com/tinphan247/2026-AWAD-PA02/pull/6/commits):
+>    the first row, "test(break): remove the step 9 enrollment check…", has a
+>    red ✖; every later row has a green ✓.
+> 2. [Commit `5fbc56e`](https://github.com/tinphan247/2026-AWAD-PA02/commit/5fbc56e7ee3ac7aaad63a2ac3eee2cf8723b51e0):
+>    a red ✖ next to the commit title; click it to see the failed `ci` check.
+> 3. [The red job log](https://github.com/tinphan247/2026-AWAD-PA02/actions/runs/42780786873/job/129710055163):
+>    open the "Tests" step: `pass 92`, `fail 2`, and `201 !== 403` for both
+>    failing tests.
+>
+> The three screenshots below were taken at the time and show the same thing.
+
 ## Timeline
 
 | Step | Commit | What changed | `ci` result |

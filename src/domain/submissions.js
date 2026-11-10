@@ -175,8 +175,11 @@ export async function handleSubmission(req, res, { repo, hooks, clock, labIdRaw 
     return;
   }
 
-  // Step 9 — ownership. DELIBERATE CONTRACT BREAK (PA2 evidence): the
-  // enrollment check is removed so CI goes red. Do not merge.
+  // Step 9 — ownership.
+  if (!repo.isEnrolled(user.id, lab.classId)) {
+    sendProblem(res, 'forbidden', 'You are not enrolled in the class that owns this lab.');
+    return;
+  }
 
   // Step 10 — idempotency. The key is reserved before validation, so a
   // concurrent retry sees it in flight.

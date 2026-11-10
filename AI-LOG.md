@@ -207,6 +207,20 @@
   checked.
 - Evidence: the pull request from `test/idempotency`.
 
+## 2026-11-10 — TA-n — OpenCode (DeepSeek V4.1 Flash Free): idempotency follow-up
+
+- Task: address the three optional suggestions Tuệ left on PR #5, on branch
+  `test/idempotency-followup` from merged `main` (`09280f7`).
+- Tool/model: OpenCode, DeepSeek V4.1 Flash Free. No test calls a model.
+- Result: three more cases — a reused key with an invalid body is `422`, not
+  `400` (step 10 before step 11); a replay with the same key in a lab of
+  another class is `403` (step 9 before step 10); and a first request that
+  fails after being held releases the in-flight key, so a third request with
+  that key creates. The third suggestion did not find a bug: the
+  implementation already releases the reservation in its create failure path.
+- Result (checks): `npm test` passes 97/97; lint, format and typecheck pass.
+- Evidence: the follow-up pull request from `test/idempotency-followup`.
+
 ## 2026-11-10 — Tuệ — Claude Code (Claude Sonnet 5.5, then Claude Opus 5.5): PR #5 review and deliberate contract break
 
 - Task: review PR #5 against contract §6 only, then break the contract on
@@ -218,7 +232,7 @@
 - Result (review): every §6 rule has a test in PR #5, the diff adds tests only,
   and 94/94 pass on the PR head. Two scratch tests, never committed, confirmed
   that the server already returns 422 before validation (step 10 before 11) and
-  403 before a replay (step 9 before 10). Neither is asserted by the suite yet.
+  403 before a replay (step 9 before 10). Tín then asserted both in PR #7.
 - Result (break): on `test/contract-break` the step 9 enrollment check was
   removed from `src/domain/submissions.js`, with no test changed. CI went red
   with 92 pass and 2 fail, and the merge was blocked:
@@ -235,6 +249,7 @@
   `TOKENS.S3` for it. Without PR #5 this break would have merged green. Also,
   the PR #5 entry above lists reuse after a 409, but no such test exists.
 - Fix: the break commit is reverted on the same branch, so `src/` is identical
-  to `main` again; the four checks pass, with 94/94 tests.
+  to `main` again; the four checks pass, with 94/94 tests before PR #7 and
+  97/97 after `main` was merged into the branch.
 - Rejected: editing a test to make the break pass, or weakening the required
   check; both are forbidden by `AGENTS.md`.

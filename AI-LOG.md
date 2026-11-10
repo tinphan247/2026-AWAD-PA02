@@ -54,3 +54,62 @@
   while no provider account was confirmed. The README states the cap, and the
   account owner records provider-side evidence before the first PA#3 call.
 - Evidence: [PR #1](https://github.com/tinphan247/2026-AWAD-PA02/pull/1).
+
+## 2026-11-10 — Tuệ — Claude Code (Claude Sonnet 5.5, then Claude Opus 5.5): endpoint contract
+
+- Task: understand PA#2, plan the remaining work, and draft and freeze the
+  contract for `POST /v1/labs/{labId}/submissions`.
+- Tool/model: Claude Code in VS Code. Prompts 1–2 ran on Claude Sonnet 5.5;
+  Tuệ switched to Claude Opus 5.5 before prompt 3, which produced the contract.
+  Claude Code session `e5157a33-a858-40f0-81ad-5a499b7fdc9a`, 07:00–07:30
+  (UTC+7). No application code calls a model.
+- Prompts (verbatim, in order):
+  1. "explain what is the goal of this homework and what i need to be done,
+     create a MD file outsidee the @2026-AWAD-PA02/ folder. i am tue."
+  2. "ok give me plan to complete this home work based on the repo, note that
+     PR2 is merge from main successfully."
+  3. "yes" (accepting the offer to draft the contract)
+  4. "before create a PR, i feel ok for
+     @2026-AWAD-PA02/docs/contract/post-labs-labId-submissions.md , make it
+     final version and ask me to check it again before create a PR, (check
+     again do i missing somethings based on @2026-AWAD-PA02/PA2_SOLUTION_PLAN.md )"
+  5. "find the json file that store this conversation and store it in
+     @2026-AWAD-PA02/AI-LOG.md , everythings else is ok, after this work tell
+     me what need to check and after that push and create PR"
+- Result: two private notes outside the repo (assignment explanation, and a
+  completion plan that moves the contract freeze to 10/11 12:00), plus
+  `docs/contract/post-labs-labId-submissions.md`. The contract follows the
+  section layout of the IA#3 `CONTRACT.md` and the decisions in
+  `PA2_SOLUTION_PLAN.md` §4.3–4.7: all 12 problem types, 12-step check order,
+  idempotency, paging marked not applicable, change policy, examples, and
+  security notes. `npm run format:check` and `npm run lint` pass.
+- Contract ambiguities decided in the first draft (Tuệ reviewed and kept them):
+  a `labId` that is not a positive integer is `404`, not `400`; route and method
+  are checked before authentication; an authenticated student can tell a
+  missing lab (`404`) from another class's lab (`403`), accepted because lab ids
+  are not secret; the idempotency fingerprint includes `labId`; only the
+  `internal` problem has a fixed `detail`; `201` has no `Location` because no
+  read endpoint exists.
+- Changed: in prompt 4, Tuệ asked for a second check against the solution
+  plan before the freeze. That pass found six gaps a client author would have
+  had to ask about. It added: the brief's unversioned path versus `/v1`, query
+  strings being ignored, user roles, unlimited attempts per lab, different keys
+  always creating different submissions, and a `validation` error having one
+  `errors` entry in version 1.
+- Rejected: the assistant pointed out that a body with only `sourceCode` makes
+  the planned "several validation errors at once" test impossible, and offered
+  a second required field (`language`). Tuệ kept the agreed
+  `{ "sourceCode" }` body, and the contract records the one-entry rule instead.
+  For prompt 5, the assistant did not copy the raw session transcript into this
+  file: it holds a personal email address and full system prompts, and this
+  repository is public. This entry records the prompts verbatim instead.
+- Review round (PR review, same session, Claude Sonnet 5.5): a reviewer found
+  two wording defects that the assistant had introduced. Changed: §3 now limits
+  "unauthenticated gets 401" to requests that match the POST route, because
+  route and method are checked first (§5.4 step 1). §6 now says the idempotency
+  comparison covers the whole body, including ignored fields such as
+  `studentId`, so changing one under the same key is `422`. The assistant laid
+  out two options (whole body, or known fields only); Tuệ chose the whole body.
+  Rejected: comparing known fields only, because a field added to v1 later would
+  change what a stored key means.
+- Evidence: the pull request that adds the contract.

@@ -163,6 +163,9 @@ Render Web Service (free)  ──────►  Neon Postgres (free, TLS)
 
 - **Render free** ngủ sau 15 phút không có request. Dùng cron-job.org (hoặc GitHub Actions schedule) ping `/healthz` mỗi 10 phút. 24/7 ≈ 730 h/tháng, vừa dưới hạn 750 h.
 - **Neon free** scale-to-zero, request đầu sau ngủ chậm ~0.5–1 s; chấp nhận được.
+- **Neon free chỉ có 100 CU-hours/project/tháng**; chạm hạn mức thì compute bị **suspend tới tháng sau** (<https://neon.com/faqs/free-plan-limits-and-quotas>). Compute chỉ ngủ khi **5 phút** không có truy vấn. Nếu worker poll DB mỗi 1–2 s thì DB thức 24/7: 0.25 CU × 730 h ≈ 182 CU-h/tháng > 100 → hết quota sau ~400 h (~17 ngày), **trước khi có điểm PA#4**. Cách xử lý (chốt khi có Oracle):
+  - Lấy được Oracle **A1 (24 GB)** → chạy **tất cả trên Oracle** (web + worker + Postgres + Caddy, phương án A), Neon chỉ để dev.
+  - Chỉ có **AMD 1 GB** → giữ Render + Neon, worker poll có **idle backoff** (giãn dần khi không có job), theo dõi CU-hours trên dashboard Neon mỗi 2–3 ngày.
 - **Oracle Always Free** cần thẻ xác minh, hay hết capacity ARM — thử region khác hoặc máy AMD 1 GB. Có thể bị thu hồi nếu idle 7 ngày → cron ping + tác vụ CPU nhẹ định kỳ.
 - Nếu **Oracle ARM**: build image `linux/arm64` (gcc, Node 24, tree-sitter đều hỗ trợ).
 - Nếu **Render free không đủ** (quá 750 h, hoặc ngủ giữa lúc chấm): chuyển web sang chính Oracle VM (phương án A) — code không đổi, chỉ đổi `DATABASE_URL` và chạy thêm container web + Caddy.
@@ -185,7 +188,7 @@ Render Web Service (free)  ──────►  Neon Postgres (free, TLS)
 | Web | Node `http` hiện có + server-rendered HTML tối giản | Ít moving part, kịp deadline; không thêm React |
 | DB | **Neon Postgres free** (TLS) | Queue bền vững, exactly-once, cầu nối Render ↔ Oracle |
 | Sandbox | Docker + image `leetkob-sandbox` (gcc/g++), `--network none` | Đủ 9 minimums |
-| Hard rules | `tree-sitter` + `tree-sitter-cpp` | AST thật, phân biệt comment/string/include; offline |
+| Hard rules | `web-tree-sitter` (WASM) + grammar `tree-sitter-cpp` | AST thật, phân biệt comment/string/include; offline. Dùng bản WASM thay cho binding native `tree-sitter`: không cần node-gyp, chạy được trên Node 24, trong image checker `--network none` và trên Oracle ARM |
 | Model | **Google Gemini free tier** (`gemini-2.5-flash` hoặc `gemini-2.0-flash`) | Free tier, structured output (JSON schema), có `responseId` |
 | Checker | CLI Node + Dockerfile riêng | Chạy được `--network none`, `MODEL_OFF=1` |
 | Deploy | **Render free (web) + Oracle Cloud Always Free (worker) + Neon (DB)** | Public HTTPS, Docker thật, miễn phí |
@@ -244,10 +247,15 @@ model_calls(id, submission_id, constraint_id, provider, model, provider_request_
 **Điều kiện ăn điểm cao:** mọi bước qua UI/API của sản phẩm, **không** seed lab bằng script.
 
 - Trang TA: form tạo lab (title, statement, tests, constraint text + deduction). Constraint có text bắt đầu `Do not use`/`Do not call` → tự nhận là ban list.
+  - **Tests phải upload được nhiều file một lần** (`<input type="file" multiple>`, ghép cặp `NN.in`/`NN.out` theo tên). `sort-merge` có 7 cặp test; người chấm tạo lab từ chính các file này qua UI, gõ tay từng test là không khả thi.
+  - Constraint: nhập được ≥2 dòng (text + deduction); có thể thêm nút "nhập từ `constraints.json`" cho nhanh, nhưng vẫn là thao tác trên UI.
 - Trang Student **trước khi nộp**: hiện đủ statement, danh sách constraint + mức trừ, và thông báo code sẽ được soát bằng luật cứng + model, model chỉ nhận đề + constraint + code đã bỏ comment/tên/MSSV (FAQ-06).
 - Trang Student **sau khi nộp**: hiện `queued/judging/judged`, verdict tổng (AC/WA/TLE/…) và verdict từng test; **không** hiện input/output của test (FAQ-02); **không** hiện constraint verdict/evidence trước publish (FAQ-08).
 - **3 bài demo dùng 3 sinh viên khác nhau**, vì chỉ bài nộp cuối của mỗi sinh viên được tính và vào queue (FAQ-02).
-- Trang TA review: bảng `submission × constraint`, verdict màu, evidence lines (highlight đúng dòng), deduction; chỉ hiện **bài counted** (FAQ-02), gồm mọi `violation`, mọi `unsure`, và 10% `pass` (FAQ-10).
+- Trang TA review: bảng `submission × constraint`, verdict màu, evidence lines (highlight đúng dòng), deduction; chỉ hiện **bài counted** (FAQ-02). Có **2 tab**:
+  - **Review queue** (theo FAQ-10): mọi `violation`, mọi `unsure`, và 10% `pass` chọn ngẫu nhiên, làm tròn lên.
+  - **Tất cả verdict**: đủ mọi cặp submission × constraint; `pass` không nằm trong mẫu 10% ghi nhãn "không vào mẫu review".
+  - Lý do: rubric C1 yêu cầu queue hiện "for each submission and each constraint, the verdict, the evidence lines and the deduction". Nếu chỉ có tab FAQ-10, bài compliant của người chấm rất dễ không xuất hiện (3 bài × 2 constraint chỉ có khoảng 3 `pass` → mẫu 10% chỉ còn 1).
 - Cách ly: query luôn kèm `class_id` của TA đang đăng nhập; TA class khác nhận **403** (theo contract PA#2, FAQ-01). Có test.
 - **Seed account** (admin/TA/student) được phép, nhưng **lab phải tạo qua UI**. Ghi rõ trong `PA3.md` để người chấm không trừ điểm.
 
@@ -269,13 +277,19 @@ model_calls(id, submission_id, constraint_id, provider, model, provider_request_
 | 6 | Output size | đọc stdout cap 1 MB/test, kill khi vượt | in hàng trăm MB | bị cắt/kill, `RE` |
 | 7 | Non-root | `--user 1000:1000`, image có user riêng | `id -u` | khác 0 |
 | 8 | No host mount / no docker socket | không `-v`; `--read-only` + tmpfs; không mount socket | đọc `/var/run/docker.sock`, `mount`, `/etc/hostname` | không thấy |
-| 9 | No secrets | không `-e MODEL_API_KEY`; worker giữ key ngoài sandbox | in `env`, grep filesystem tìm key/pattern | không có key |
+| 9 | No secrets | không `-e MODEL_API_KEY`; worker giữ key ngoài sandbox | in `env`, grep filesystem tìm key/pattern; **thêm một attack lúc compile**: `#include "/proc/1/environ"` và `#include` đường dẫn file env của worker (vd. `/etc/leetkob/worker.env`) | không có key; compile lỗi vì file không tồn tại/không đọc được |
 
 **Bắt buộc thêm:**
 
 - **Compile trong sandbox** (cùng image, cùng limits, `--network none`).
 - **Worker riêng:** test "stop worker → submit → start worker → judged exactly once" (hoặc quay video).
 - **CI chạy attack tests trên tag `pa3`.** GitHub Actions runner có Docker → thêm job `sandbox` trong `ci.yml`, trigger cả `tags: ['pa3']`.
+- Minimum 9 phải chặn cả **lúc compile**: rubric ghi key không được nằm trong "anything the compiler can `#include`". Vì compile chạy trong sandbox không mount gì, attack `#include` phải compile lỗi.
+- **Tách test theo môi trường.** Khi chấm, người chấm chạy các lệnh check trong container: cài dependency xong thì **cắt mạng**, kill sau 15 phút, và **đọc sandbox test từ CI** chứ không chạy (rubric, "What we run when marking", bước 2). Vì vậy:
+  - `npm test`: chỉ unit test chạy offline, **không cần Docker, Neon hay mạng**. Test exactly-once của queue dùng Postgres nhúng (`@electric-sql/pglite`) hoặc repo giả, không dùng Neon.
+  - `npm run test:sandbox`: 9 attack + compile trong sandbox, cần Docker; chỉ chạy trong job CI `sandbox`.
+  - README ghi rõ hai lệnh này.
+- **Oracle không chặn việc làm sandbox.** Attack tests chạy được trên Docker ở máy local và trên GitHub Actions; rubric chấm C2 qua CI run của tag. Oracle chỉ cần cho deploy (thứ Ba) và cho "attack của người chấm trên deployment không lọt ra".
 - Không dùng `-v /var/run/docker.sock`, `--privileged`, `--env-file`, `-e MODEL_API_KEY` trong lệnh chạy sandbox.
 
 **Bằng chứng:** `test/sandbox/`, job CI `sandbox` trên tag, log từng attack fail đúng cách.
@@ -304,6 +318,7 @@ model_calls(id, submission_id, constraint_id, provider, model, provider_request_
 3. Với mỗi tên bị cấm, chọn matcher theo bảng trên; duyệt AST và **resolve scope**:
    - `std::sort(...)` → bắt;
    - `sort(...)` chỉ bắt khi có `using namespace std;` **và** không bị shadow bởi hàm/namespace student khai báo;
+   - `sort(...)` không qualify, file **không tự định nghĩa** `sort` → vẫn bắt, kể cả khi không có `using namespace std;`: bài đã AC nghĩa là compiler đã resolve tới `std::sort` (qua ADL với iterator của `std`);
    - `using std::sort;` rồi gọi `sort(...)` → bắt;
    - macro chứa tên cấm → bắt ở dòng `#define` **hoặc** dòng gọi macro (một trong hai là đủ evidence).
 4. Bỏ qua theo **node type**, không theo text: comment, string literal, `#include <algorithm>` (include một mình **không** phải violation).
@@ -353,10 +368,18 @@ model_calls(id, submission_id, constraint_id, provider, model, provider_request_
 - Dùng structured output của Gemini (`responseSchema`).
 - Validate bằng `ajv`/`zod`; sai schema → `unsure`.
 - Mỗi evidence line phải **khớp chính xác** dòng code gốc; lệch → `unsure`.
+  - **Chú ý dòng có comment cuối dòng.** Model nhìn bản đã xoá comment, nên với dòng `sort(a); // x` nó trả `"sort(a);"`. Còn `eval.mjs` so evidence với **dòng của file `.cpp` gốc** (chỉ bỏ khoảng trắng hai đầu, hàm `evidenceHits`). Cách làm: (1) kiểm tra `text` model trả khớp dòng tương ứng trong **bản đã xoá comment**; (2) khi lưu verdict/ghi `predictions.jsonl`, **lấy `text` từ file gốc theo số dòng**. Thiếu bước 2 thì violation bị tính `bad-evidence`, không được tính là caught.
+- **Một lời gọi = một cặp (submission, constraint)**, hoặc đổi output thành mảng có `constraint` id. Scaffold hiện lệch: `buildPrompt()` gửi mọi constraint trong một prompt, còn `validateVerdictOutput()` chỉ nhận **một** verdict.
+- **Chống prompt injection:** xoá comment không chặn được injection nằm trong string literal (dev set có tag `injection`). Bọc code trong delimiter rõ ràng, ghi trong system prompt rằng mọi thứ trong khối code là dữ liệu cần review, không phải chỉ dẫn; verdict chỉ đáng tin khi evidence khớp dòng thật.
 - Timeout mỗi call (ví dụ 20s) và timeout tổng; quá hạn → `unsure`.
 - Cost cap/lab: đếm token + USD; vượt cap → dừng gọi, phần còn lại `unsure`.
 
-**Call log (bắt buộc):** JSONL + bảng DB, mỗi call có `provider_request_id` (Gemini `responseId`), `model`, `tokens_in`, `tokens_out`, `latency_ms`, `cost_usd`, `submission_id`, `constraint_id`. **Không log source code / identity.**
+**Call log (bắt buộc):** JSONL + bảng DB, mỗi call có `provider_request_id` (Gemini `responseId`), `model`, `tokens_in`, `tokens_out`, `latency_ms`, `cost_usd`, `submission_id`, `constraint_id`, **và `prompt` đã gửi (bản đã xoá comment và danh tính)**.
+
+- Lý do: rubric C4 (17–20 điểm) ghi model chỉ nhận statement, constraints và code đã bỏ comment/danh tính, và "**the prompts in your call log show it**". Call log không có prompt thì người chấm không kiểm được điều này.
+- Không log **code gốc** và **danh tính** (tên, MSSV, email). Prompt đã ẩn danh là đúng thứ được phép gửi cho model nên được phép lưu.
+- `runs/pa3-dev/calls.jsonl` của dev run phải có đủ prompt.
+- `AGENTS.md` đã sửa câu "Do not log ... submitted source code" cho khớp.
 
 **Cost/lab 80 bài:** đo token thật từ dev run, ghi công thức vào README + AI-LOG:
 
@@ -436,6 +459,13 @@ Quy tắc:
 - **Không nới test/label** trong commit làm xanh.
 - Không `git rebase`/squash lại toàn bộ cuối bài.
 
+**Đã lệch một lần (ghi thật, không sửa lịch sử):**
+
+- `dc1060c` thêm client Gemini (`src/model/gemini.js`) **không kèm test**; `test/model/smoke.test.js` vẫn là placeholder `assert.ok(true)`. Commit này còn gộp hai phần (client model + `docs/deploy.md`/`scripts/keepalive.mjs`).
+- `65d04fe` (scaffold) đặt stub cho mọi phần trong một commit; chấp nhận được vì là khung, nhưng từ đây mỗi PR chỉ một phần.
+- Commit model tiếp theo của Tín: **test cho `callGemini` với `fetch` giả**, không gọi mạng (timeout → `TIMEOUT`, response không phải JSON, HTTP lỗi, đọc `usageMetadata`). Kèm sửa nhỏ: đưa API key từ query string `?key=` sang header `x-goog-api-key` để key không lọt vào log URL.
+- Ghi rõ hai điểm lệch này trong `AI-LOG.md` và `SELF_ASSESSMENT_REPORT.md`; không claim 5/5 cho C7 nếu không chắc.
+
 ### 4.8 Criterion 8 — AI-LOG.md (5 điểm) · cả nhóm, Tùng review
 
 Mỗi entry: ngày, người, tool + model, phần việc, **Changed** (đã sửa gì), **Rejected** (đề xuất gì bị từ chối và vì sao). Ví dụ thật cần ghi:
@@ -458,7 +488,8 @@ Thêm **"never list"** vào `AGENTS.md` theo bảng "Catching your assistant" c�
 - [x] **Dev set đã tải** từ <https://github.com/fithcmus/awad-leetkob-eval>, xác minh SHA-256, copy vào `PA03/leetkob-eval/` (giữ LF).
 - [ ] Thêm `.gitattributes` với `leetkob-eval/** -text`; kiểm tra hash lại sau khi copy vào repo.
 - [x] **Render Web Service** và **Neon Postgres** đã có (Tín).
-- [ ] **Oracle Cloud Always Free (worker)** — vẫn cần đăng ký (Tín): VM, Docker, user non-root, chỉ mở SSH; budget cảnh báo 0 USD.
+- [ ] **Oracle Cloud Always Free (worker)** — vẫn cần đăng ký (Tín): VM, Docker, user non-root, chỉ mở SSH; budget cảnh báo 0 USD. **Hạn chót: tối Chủ nhật 22/11.** Không chặn việc ngày 22–23 (sandbox test chạy local + CI), nhưng nếu xác minh thẻ lỗi hoặc hết capacity thì còn thời gian chuyển sang GCP e2-micro trước khi deploy thứ Ba.
+- [ ] **Merge `feat/pa3-scaffold` vào `main` qua PR tối nay**, để Tùng và Tuệ tạo nhánh từ `main` ngày 22/11.
 - [ ] Render: set `DATABASE_URL` (Neon); **không** set `GEMINI_API_KEY` trên Render.
 - [ ] Neon: chạy migration schema (mục 3.3) — Tùng.
 - [ ] Tạo cron-job.org ping `https://<render-app>.onrender.com/healthz` mỗi 10 phút.
@@ -466,7 +497,7 @@ Thêm **"never list"** vào `AGENTS.md` theo bảng "Catching your assistant" c�
 - [ ] Chốt schema + route (mục 3.3, 3.4); tạo các nhánh.
 - [ ] Thêm "never list" vào `AGENTS.md`; cập nhật `ci.yml` trigger `tags: ['pa2','pa3']`.
 
-**Gate tối nay:** Render trả `/healthz` qua HTTPS; `docker run hello-world` trên Oracle OK; worker kết nối được Neon; `Get-FileHash` của `eval.mjs`/`labels.jsonl` đúng `c836…`/`262c…`.
+**Gate tối nay:** Render trả `/healthz` qua HTTPS; worker kết nối được Neon; `Get-FileHash` của `eval.mjs`/`labels.jsonl` đúng `c836…`/`262c…`. (`docker run hello-world` trên Oracle dời sang gate Chủ nhật.)
 
 ### Chủ nhật 22/11 — Sandbox + queue + hard rules (Tùng, Tuệ)
 
@@ -475,7 +506,7 @@ Thêm **"never list"** vào `AGENTS.md` theo bảng "Catching your assistant" c�
 - [ ] Tuệ: tree-sitter hard rules + toàn bộ fixture trap + test.
 - [ ] Tín: khung UI tạo lab/nộp bài; API enqueue.
 
-**Gate:** 9 attack fail đúng; worker restart chỉ 1 bộ verdict; `MODEL_OFF` hard rule cho kết quả đúng trên fixture.
+**Gate:** 9 attack fail đúng; worker restart chỉ 1 bộ verdict; `MODEL_OFF` hard rule cho kết quả đúng trên fixture; **`docker run hello-world` trên Oracle OK** (hoặc đã chuyển sang GCP e2-micro); đã chốt dùng Neon hay Postgres trên Oracle (mục 3.1).
 
 ### Thứ Hai 23/11 — Model + limits + UI (Tín, Tùng)
 
@@ -569,6 +600,9 @@ Thêm **"never list"** vào `AGENTS.md` theo bảng "Catching your assistant" c�
 | Exactly-once race | TB | Mất điểm C2 | Unique constraint + transaction + test restart |
 | Render free ngủ / hết 750 h | Cao | Người chấm mở link bị chậm hoặc 502 | Cron ping `/healthz` mỗi 10 phút; nếu hết hạn mức thì chuyển web sang Oracle (phương án A) |
 | Neon cold start / mất kết nối | TB | Request đầu chậm, worker retry | Retry có backoff; connection pool; timeout rõ ràng |
+| **Neon hết 100 CU-hours/tháng** | Cao | DB bị suspend tới tháng sau → deployment chết giữa PA#4 | Worker poll 24/7 giữ DB thức; xem mục 3.1: chạy hết trên Oracle A1, hoặc idle backoff + theo dõi CU-hours |
+| **`npm test` cần mạng/Docker/DB** | Cao | Người chấm chạy check với mạng đã cắt → đỏ | `npm test` chỉ offline (pglite/repo giả); sandbox test tách sang `npm run test:sandbox` trong job CI riêng (mục 4.2) |
+| Evidence lệch vì comment cuối dòng | TB | Violation thành `bad-evidence`, recall tụt | Lấy `text` từ file gốc theo số dòng (mục 4.4) |
 | Render ↔ Oracle lệch mạng | TB | Job kẹt, verdict chậm | Worker poll 1–2 s; health check hai đầu; log `job_id` |
 | Tự chấm cao hơn thực tế | TB | Trừ tới −10 | Chấm sát rubric, mỗi dòng có evidence |
 | Quên giữ deployment sau 25/11 | Cao | PA#4 red team không đánh được | Bật monitor + nhắc lịch |

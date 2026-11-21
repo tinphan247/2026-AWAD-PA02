@@ -13,7 +13,9 @@ Install with `npm ci`. Run `npm run lint`, `npm run format:check`,
 Agree on the endpoint contract before implementation. Name contract tests for
 the behavior they check. Use RFC 9457 problem details for API errors. Keep PRs
 focused and record meaningful AI assistance and review decisions in AI-LOG.md.
-Do not log student identity or submitted source code.
+Do not log student identity or submitted source code. Exception (PA#3): the
+model call log stores the prompt actually sent, which is the code with comments
+and identity removed, because the rubric checks that prompt in the call log.
 
 Assistant permissions:
 

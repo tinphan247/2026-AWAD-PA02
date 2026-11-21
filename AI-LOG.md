@@ -351,3 +351,37 @@
 - Not verified: the original rubric PDF is not in the workspace, so the advice
   that the break PR should be fixed and merged rather than left open rests on
   the team's copies (`PA2_TASKS.md` T3, `PA2_SOLUTION_PLAN.md` §5.4).
+
+## 2026-11-21 — Tùng — Claude (Claude Opus 5.5): PA#3 plan review
+
+- Task: check `PA3_PLAN.md` and the three `feat/pa3-scaffold` commits
+  (`65d04fe`, `dc1060c`, `4d75d05`) against the PA#3 rubric, the class brief
+  and `leetkob-eval/eval.mjs` before the team starts work on 22/11.
+- Input: Tùng gave the assistant the rubric and brief PDFs and asked whether
+  the plan is good enough to start, given that Tín sets up the Oracle sandbox
+  VM later.
+- Result: the plan covers all eight criteria and cites the FAQ entries. The
+  assistant re-verified the dev set (all 128 files match `leetkob-eval.sha256`)
+  and found gaps that would cost marks; this PR writes them into the plan.
+- Changed: the plan said the call log must not contain source code, but
+  criterion 4 requires that "the prompts in your call log show" comments and
+  identity removed. The call log now stores the anonymised prompt, and
+  `AGENTS.md` says so.
+- Changed: `npm test` would have needed Neon and Docker, but marking runs the
+  checks with the network cut. Sandbox tests move to `npm run test:sandbox`,
+  run only in the CI `sandbox` job; the queue test uses an embedded Postgres.
+- Changed: the review page gets an "all verdicts" tab next to the FAQ-10
+  queue, because criterion 1 expects every submission × constraint and FAQ-10
+  samples only 10% of passes.
+- Changed: evidence `text` is taken from the original line by line number.
+  `eval.mjs` (`evidenceHits`) compares against the original `.cpp` line, so a
+  line with a trailing comment would otherwise count as `bad-evidence`.
+- Changed: minimum 9 gets a compile-time `#include` attack; the lab form takes
+  multi-file test upload; Neon's free plan (100 CU-hours per project per month,
+  then suspended) is a risk because a worker polling every 1–2 s keeps it
+  awake; Oracle gets a deadline of 22/11 evening; the plan records that
+  `dc1060c` added the Gemini client without a test.
+- Rejected: none yet; Tín reviews each point in this PR.
+- Not verified: the assistant could not run `npm ci` and the four checks in its
+  workspace, and could not see the CI status of `feat/pa3-scaffold`.
+- Evidence: PR `docs/pa3-plan-review` → `feat/pa3-scaffold`.

@@ -1,0 +1,12 @@
+# Checker image (PA#3, criterion 6).
+# Runs with the model off and the network cut:
+#   docker run --network none --memory 1g --pids-limit 256 \
+#     -v "$PWD/leetkob-eval:/data:ro" -v "$PWD/runs:/out" \
+#     -e MODEL_OFF=1 leetkob-checker --dataset /data --out /out/predictions.jsonl
+
+FROM node:24-alpine
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev
+COPY . .
+ENTRYPOINT ["node", "bin/check.mjs"]

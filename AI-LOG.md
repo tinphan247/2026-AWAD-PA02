@@ -384,4 +384,4 @@
 - Rejected: none yet; Tín reviews each point in this PR.
 - Not verified: the assistant could not run `npm ci` and the four checks in its
   workspace, and could not see the CI status of `feat/pa3-scaffold`.
-- Evidence: PR `docs/pa3-plan-review` → `feat/pa3-scaffold`.
+- Evidence: [PR #13](https://github.com/tinphan247/2026-AWAD-PA02/pull/13).

@@ -1,3 +1,7 @@
 * text=auto eol=lf
 
 *.pdf binary
+
+# The published dev set is frozen. Keep its bytes exactly as published;
+# never let Git convert line endings (the rubric checks SHA-256).
+leetkob-eval/** -text

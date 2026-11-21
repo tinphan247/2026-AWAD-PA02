@@ -38,3 +38,16 @@ Assistant permissions:
 - Weaken required checks, push directly to protected main, or merge a red PR.
 - Run student code outside a sandbox, or send identifiable student code to a model.
 - Change the API contract silently.
+
+## Never (PA#3)
+
+- Commit secrets or expose them to a sandbox or CI logs.
+- Call a real model from a unit test.
+- Alter tests, evaluation data or labels merely to make a check pass.
+- Delete a test.
+- Run student code outside a sandbox, or send identifiable student code to a model.
+- Use `-v /var/run/docker.sock`, `--privileged`, `--env-file` or `-e MODEL_API_KEY` on the sandbox.
+- Let a model verdict change a student's mark or reach the student without a TA.
+- Use the model output without a schema check and a timeout.
+- Edit `leetkob-eval/` (it must stay byte-for-byte the published copy).
+- Rebuild or split the commit history after the work is finished.

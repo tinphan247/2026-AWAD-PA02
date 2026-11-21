@@ -457,10 +457,10 @@ Thêm **"never list"** vào `AGENTS.md` theo bảng "Catching your assistant" c�
 
 - [x] **Dev set đã tải** từ <https://github.com/fithcmus/awad-leetkob-eval>, xác minh SHA-256, copy vào `PA03/leetkob-eval/` (giữ LF).
 - [ ] Thêm `.gitattributes` với `leetkob-eval/** -text`; kiểm tra hash lại sau khi copy vào repo.
-- [ ] **Đăng ký 3 dịch vụ free:** Render Web Service, Oracle Cloud Always Free (worker), Neon Postgres.
-- [ ] Render: tạo service, set `DATABASE_URL`; **không** set `GEMINI_API_KEY` trên Render.
-- [ ] Oracle: tạo VM, cài Docker, user non-root, chỉ mở SSH; bật budget cảnh báo 0 USD.
-- [ ] Neon: tạo DB, lấy connection string TLS; chạy migration schema (mục 3.3).
+- [x] **Render Web Service** và **Neon Postgres** đã có (Tín).
+- [ ] **Oracle Cloud Always Free (worker)** — vẫn cần đăng ký (Tín): VM, Docker, user non-root, chỉ mở SSH; budget cảnh báo 0 USD.
+- [ ] Render: set `DATABASE_URL` (Neon); **không** set `GEMINI_API_KEY` trên Render.
+- [ ] Neon: chạy migration schema (mục 3.3) — Tùng.
 - [ ] Tạo cron-job.org ping `https://<render-app>.onrender.com/healthz` mỗi 10 phút.
 - [ ] Tạo Gemini API key, bật **spending cap**, chỉ đặt trong env của worker trên Oracle.
 - [ ] Chốt schema + route (mục 3.3, 3.4); tạo các nhánh.

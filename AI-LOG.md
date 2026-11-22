@@ -385,3 +385,35 @@
 - Not verified: the assistant could not run `npm ci` and the four checks in its
   workspace, and could not see the CI status of `feat/pa3-scaffold`.
 - Evidence: [PR #13](https://github.com/tinphan247/2026-AWAD-PA02/pull/13).
+
+## 2026-11-22 — Tín — Claude (DeepSeek V4.1 Flash): PA#3 model and TA/student flow
+
+- Task: implement Tín's PA#3 share: the anonymised prompt and one-call-per-
+  constraint model path (C4), plus the TA create-lab, student submit and TA
+  review flow (C1).
+- Input: `PA3_PLAN.md` §4, `AGENTS.md`, the dev-set `constraints.json` shape,
+  and the plan review recorded in PR #13.
+- Result: `anonymizeCode()` blanks `//` and block comments without changing
+  line count or length, redacts caller-supplied names/MSSVs and emails, and
+  `buildPrompt()` now sends exactly one constraint per call. Added
+  `VERDICT_RESPONSE_SCHEMA`, `src/model/cost.js` (list-price arithmetic) and
+  `src/model/calllog.js` (JSONL with the anonymised prompt, request id, tokens,
+  latency and cost). The web flow is server-rendered: token login, TA lab form
+  with multi-file `NN.in`/`NN.out` upload, student page with constraints and
+  deductions, submission status, and a review page with the FAQ-10 queue plus
+  an all-verdicts tab; a TA from another class gets 403.
+- Changed: `src/app.js` mounts the web router before the `/v1` contract and
+  keeps `/v1` untouched; `testing.webStore` is the seam tests use to inject
+  worker verdicts. `src/domain/labs.js` and `review.js` replace their throwing
+  stubs with the helpers the routes use.
+- Rejected: a template engine or client framework; both would add dependencies
+  for a flow that plain HTML covers.
+- Rejected: sending all constraints in one prompt; a single bad answer would
+  have poisoned every constraint of that submission.
+- Not verified: a real Gemini call (no key yet), the Oracle worker and the
+  Postgres repo (Tùng's branches are not merged), and the checker dev run
+  (Tuệ). The 10% pass sample is pseudo-random and stable by verdict id, not a
+  true random draw; this is recorded in `src/domain/review.js`.
+- Evidence: `npm test` 143/143, `npm run lint`, `npm run format:check`,
+  `npm run typecheck`; `test/web/flow.test.js`, `test/unit/model-*.test.js`,
+  `test/unit/review-queue.test.js`.

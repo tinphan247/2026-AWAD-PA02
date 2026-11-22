@@ -392,8 +392,8 @@
   image and runner, one attack submission per minimum, compile inside the
   sandbox, CI job. Ownership confirmed with Tín: he creates the Oracle
   account and VM; the sandbox code is Tùng's.
-- Order: `a2c4859` (tests, red: no runner) → `6985b89` (runner, green) →
-  `0d78d8d` (CI job and `test:sandbox`, which Tùng approved first because
+- Order: `f5e8dbe` (tests, red: no runner) → `d1cb18e` (runner, green) →
+  `88dfb82` (CI job and `test:sandbox`, which Tùng approved first because
   AGENTS.md asks before changing scripts and CI).
 - Changed: the first runner piped the program's stdout into `head -c` to cap
   output. The wall-clock attack (a child that calls `setsid()` and sleeps)
@@ -419,3 +419,7 @@
   so the local image was built on an Ubuntu 24.04 g++ 13 base instead of
   `gcc:13`; CI uses `gcc:13`. The network attack's negative control needs a
   host with internet; CI has it.
+- Note: at Tùng's request, the `Co-Authored-By: Claude` and `Claude-Session`
+  trailers were removed from this PR's commits before merge, keeping their
+  dates; the commit ids above are the rewritten ones. Assistant use stays
+  recorded here.

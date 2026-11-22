@@ -433,7 +433,9 @@
   becomes unsure. The call log keeps the anonymised prompt.
 - Changed: added `model_error` to `UNSURE_REASONS`; README now describes the
   PA#3 flow, accounts and the model pipeline; `PA3.md` gained a local demo
-  walkthrough.
+  walkthrough, a cost projection and a video script link; added
+  `PA3_PROGRESS.md` (per-person done/blocked board) and `docs/video-script.md`;
+  `.env.example` lists `MODEL_TIMEOUT_MS` and `MODEL_CALL_LOG`.
 - Rejected: letting the judge call the model when the lab has reached its cost
   cap; it returns `cost_cap` without a network call.
 - Rejected: trusting the model's evidence text for the database or predictions

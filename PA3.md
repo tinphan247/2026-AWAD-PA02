@@ -78,6 +78,8 @@ và call log.
 TA review queue (verdict/evidence/deduction) → student chỉ thấy kết quả test,
 không thấy verdict constraint trước publish.
 
+Kịch bản chi tiết theo từng phút: [`docs/video-script.md`](docs/video-script.md).
+
 ## 7. Tuân thủ FAQ
 
 | FAQ | Cách làm |
@@ -102,6 +104,18 @@ không thấy verdict constraint trước publish.
   kiểm tra từng dòng evidence trên bản đã ẩn danh → lấy `text` từ **dòng gốc**
   (để `eval.mjs` khớp). Timeout, schema sai, evidence lệch, cost cap đều thành
   `unsure` kèm lý do; model không bao giờ đặt mức trừ.
+
+**Dự toán cho 80 bài** (giả định mỗi call ~1.200 token vào + 150 token ra,
+2 constraint semantic/bài):
+
+| Số bài | Constraint/bài | Số call | Token vào | Token ra | Giá list |
+|---:|---:|---:|---:|---:|---:|
+| 80 | 2 | 160 | 192.000 | 24.000 | **$0,1176** |
+| 80 | 3 | 240 | 288.000 | 36.000 | **$0,1764** |
+
+Free tier: hoá đơn thực tế **$0**; bảng trên là giá list để so sánh và để
+phát hiện bất thường (ví dụ một prompt phình to).
+
 - **TODO**: điền số call/token/cost thực tế của lab demo sau khi chạy worker.
 
 ## 9. Chạy thử local

@@ -9,6 +9,9 @@ FROM node:24-alpine
 
 WORKDIR /app
 ENV NODE_ENV=production
+# src/main.js defaults to 127.0.0.1, which is unreachable from outside a
+# container. Render also sets PORT, which src/main.js already reads.
+ENV HOST=0.0.0.0
 
 # Runtime dependencies only. PA#2 has none; Tùng's Postgres client arrives with
 # the queue branch and is installed by the same command.

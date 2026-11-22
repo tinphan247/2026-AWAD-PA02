@@ -393,8 +393,8 @@
   start it again, judged exactly once" test. Sandbox code waits until the
   team confirms who owns it (the plan says Tùng; Tín mentioned doing it with
   the Oracle VM).
-- Order: the test commit `e5825b2` came first and was red (no `migrate.js`,
-  no claim code); `3892f3d` makes it green.
+- Order: the test commit `827bc6a` came first and was red (no `migrate.js`,
+  no claim code); `363e976` makes it green.
 - Dependencies (AGENTS.md asks first): the assistant asked; Tùng had not
   decided, so it added the option it recommended, `pg` for Neon and
   `@electric-sql/pglite` (dev only) so `npm test` runs real SQL with the
@@ -419,3 +419,7 @@
 - Not verified: pglite has one connection, so "two workers polling at once"
   checks the SQL guards but not two sessions racing for a row lock; that and
   the migration on Neon need a run with the real `DATABASE_URL`.
+- Note: at Tùng's request, the `Co-Authored-By: Claude` and `Claude-Session`
+  trailers were removed from this PR's commits before merge, keeping their
+  dates; the commit ids above are the rewritten ones. Assistant use stays
+  recorded here.

@@ -385,3 +385,35 @@
 - Not verified: the assistant could not run `npm ci` and the four checks in its
   workspace, and could not see the CI status of `feat/pa3-scaffold`.
 - Evidence: [PR #13](https://github.com/tinphan247/2026-AWAD-PA02/pull/13).
+
+## 2026-11-22 — Tùng — Claude (Claude Opus 5.5): queue and exactly-once
+
+- Task: criterion 2, queue half (PA3_PLAN.md §3.3, §4.2): schema migration,
+  Postgres claim and lease, worker loop, and the "stop the worker, submit,
+  start it again, judged exactly once" test. Sandbox code waits until the
+  team confirms who owns it (the plan says Tùng; Tín mentioned doing it with
+  the Oracle VM).
+- Order: the test commit `e5825b2` came first and was red (no `migrate.js`,
+  no claim code); `3892f3d` makes it green.
+- Dependencies (AGENTS.md asks first): Tùng agreed to `pg` for Neon and
+  `@electric-sql/pglite` (dev only) so `npm test` runs real SQL with the
+  network cut. `npm audit`: 0 vulnerabilities.
+- Changed: the first draft had a fixed 60 s lease. A judgement can outlast it
+  (compile 10 s, 7 tests × 3 s wall, two model calls of up to 20 s), and a
+  second worker would then judge the same submission. Added a heartbeat that
+  extends the lease, a 120 s default, and a test with a judge five times
+  slower than the lease.
+- Changed: a worker dying on its last attempt left the job `claimed` forever,
+  because only jobs under the attempt limit are claimable. The claim now
+  marks those jobs `failed` and the submission `error`; test added.
+- Changed: idle polling backs off (1 s doubling up to `WORKER_MAX_IDLE_MS`),
+  following the Neon CU-hour risk in PA3_PLAN.md §3.1.
+- Rejected: an in-memory fake repo for the exactly-once test; it would not
+  exercise the SQL that gives exactly-once (`SKIP LOCKED`, the unique keys,
+  the `claimed_by` guard).
+- Rejected: running the test against Neon; marking cuts the network.
+- Verified: all four checks pass locally on Node 24 (134 tests); the queue
+  tests pass with the network removed (`unshare -n`).
+- Not verified: pglite has one connection, so "two workers polling at once"
+  checks the SQL guards but not two sessions racing for a row lock; that and
+  the migration on Neon need a run with the real `DATABASE_URL`.

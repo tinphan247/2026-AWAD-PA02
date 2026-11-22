@@ -4,7 +4,7 @@ on:
   pull_request:
   push:
     branches: [main]
-    tags: ['pa2']
+    tags: ['pa2', 'pa3']
 
 permissions:
   contents: read
@@ -43,3 +43,29 @@ jobs:
 
       - name: Tests
         run: npm test
+
+  # PA#3 criterion 2: the nine sandbox attacks need Docker, so they run here
+  # and not in `npm test` (which must pass with the network cut).
+  sandbox:
+    name: sandbox
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Build sandbox image
+        run: docker build -t leetkob-sandbox:test sandbox
+
+      - name: Attack tests
+        run: npm run test:sandbox

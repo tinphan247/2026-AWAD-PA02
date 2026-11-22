@@ -1,0 +1,55 @@
+# LeeTKOB PA#3 worker (queue + Docker sandbox + model).
+#
+# Install on the Oracle VM:
+#   sudo cp ~/leetkob/deploy/leetkob-worker.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now leetkob-worker
+#
+# Adjust WorkingDirectory if the repo is not at /home/ubuntu/leetkob.
+# The worker runs on the host, not in a container, because it starts the
+# sandbox with the Docker CLI. The sandbox itself never gets the socket.
+
+[Unit]
+Description=LeeTKOB PA#3 worker (queue, sandbox, model)
+Documentation=https://github.com/tinphan247/2026-AWAD-PA02/blob/main/docs/oracle-vm.md
+After=network-online.target docker.service
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+# systemd grants the group at start, so the Docker socket is reachable even
+# in a session that predates `usermod -aG docker`.
+SupplementaryGroups=docker
+WorkingDirectory=/home/ubuntu/leetkob
+EnvironmentFile=/etc/leetkob/worker.env
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/node worker/index.js
+# Kill any sandbox container the worker left behind on stop or crash.
+ExecStopPost=-/bin/sh -c '/usr/bin/docker ps -aq --filter "name=^leetkob-sbx-" | xargs -r /usr/bin/docker rm -f'
+Restart=always
+RestartSec=15
+TimeoutStopSec=30
+KillMode=mixed
+UMask=0077
+LimitNOFILE=65535
+
+# Hardening. The worker needs the Docker socket and /var/log/leetkob, nothing
+# else. ProtectHome is deliberately not set: the docker CLI reads ~/.docker.
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=full
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=leetkob-worker
+
+[Install]
+WantedBy=multi-user.target

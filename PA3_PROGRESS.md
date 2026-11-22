@@ -28,7 +28,8 @@ Thứ tự merge đề nghị: `tung/queue-exactly-once` → `tung/sandbox` →
 | Review queue FAQ-10 + tab tất cả verdict | xong | `src/domain/review.js` |
 | Cách ly lớp 403 | xong | `test/web/flow.test.js` |
 | `PA3.md`, README, kịch bản video | xong | `PA3.md`, `README.md`, `docs/video-script.md` |
-| **Oracle VM** | **blocked** | chưa đăng ký; cần thẻ xác minh |
+| Runbook Oracle + script cài + systemd unit | xong | `docs/oracle-vm.md`, `deploy/oracle-setup.sh`, `deploy/leetkob-worker.service` |
+| **Oracle VM** | **chờ bạn** | đăng ký + thẻ xác minh; runbook ở trên |
 | Env Render/Neon + cron ping | chờ Oracle | `docs/deploy.md`, `scripts/keepalive.mjs` |
 | Gọi Gemini thật | **blocked** | chờ key của Tùng |
 | Tích hợp worker | chờ Tùng merge | `src/model/judge.js` là điểm gọi |
@@ -62,7 +63,7 @@ Thứ tự merge đề nghị: `tung/queue-exactly-once` → `tung/sandbox` →
 
 | Blocker | Ai gỡ | Ảnh hưởng |
 |---|---|---|
-| Oracle Cloud VM | Tín | deploy worker + sandbox (C2 trên deployment) |
+| Oracle Cloud VM | Tín | deploy worker + sandbox (C2 trên deployment); runbook sẵn, chờ đăng ký/thẻ |
 | Gemini key | Tùng → Tín | chưa có call thật (C4) |
 | Merge schema Postgres | Tùng | UI còn in-memory, restart mất lab |
 | Merge sandbox | Tùng | chưa có job CI trên tag |

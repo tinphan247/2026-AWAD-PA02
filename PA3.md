@@ -21,6 +21,8 @@ Repo: <https://github.com/tinphan247/2026-AWAD-PA02>
 - `GEMINI_API_KEY` chỉ đặt trên worker Oracle; **không** đặt trên Render và
   **không** truyền vào sandbox.
 - Hướng dẫn từng bước: [`docs/deploy.md`](docs/deploy.md).
+- Runbook Oracle (đăng ký, thẻ, SSH, firewall, systemd):
+  [`docs/oracle-vm.md`](docs/oracle-vm.md); script cài: `deploy/oracle-setup.sh`.
 
 ## 2. Tài khoản test
 

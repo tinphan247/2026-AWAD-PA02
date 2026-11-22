@@ -17,8 +17,11 @@ Oracle worker.
 1. New Web Service, connect the GitHub repo, build from the root `Dockerfile`
    (recommended; it is also what `docker-compose.yml` builds) or use the Node
    runtime with `npm ci && npm start`, on the `main` branch.
-2. Environment variables: `DATABASE_URL`, `PORT`. **Do not set `MODEL_API_KEY`
-   or `GEMINI_API_KEY` here.**
+2. Environment variables: `DATABASE_URL`, `NODE_ENV=production`, and
+   `HOST=0.0.0.0` when using the Node runtime. The root `Dockerfile` already
+   sets `HOST`; `src/main.js` otherwise binds `127.0.0.1` and the service is
+   unreachable. Do not set `PORT` (Render provides it). **Do not set
+   `MODEL_API_KEY` or `GEMINI_API_KEY` here.**
 3. Health check path: `/healthz` (or `/health`).
 4. Free tier sleeps after 15 minutes of inactivity: create a cron-job.org job
    that GETs `https://<app>.onrender.com/healthz` every 10 minutes
@@ -26,18 +29,29 @@ Oracle worker.
 
 ## 3. Oracle Cloud Always Free (worker + sandbox)
 
+Step-by-step runbook, including signup, card verification, SSH keys, firewall
+and systemd: [`docs/oracle-vm.md`](oracle-vm.md). The bootstrap script is
+[`deploy/oracle-setup.sh`](../deploy/oracle-setup.sh).
+
 1. Sign up at https://www.oracle.com/cloud/free/ (card required for
    verification, no charge on Always Free). Tín owns this account.
 2. Create a VM: "Always Free" Ampere A1 (4 OCPU / 24 GB) or, if capacity is
-   gone, an AMD micro (1 GB). Region with available capacity.
-3. Open only SSH (22) in the security list; the worker needs **outbound** only.
-4. Install Docker and create a non-root user (`useradd -m -u 1000 sandbox` is
-   already in the sandbox image).
-5. Set env on the VM: `DATABASE_URL`, `GEMINI_API_KEY` (from Tùng), `MODEL_NAME`,
-   `MODEL_SPEND_CAP_USD`, `WORKER_ID`.
-6. Run the worker: `docker compose up -d worker` (or `node worker/index.js`
-   under a process manager).
-7. Budget alert at 0 USD.
+   gone, an AMD micro (1 GB, add 2 GB swap).
+3. Open only SSH (22) in the security list, restricted to your own IP; the
+   worker needs **outbound** only.
+4. Run `deploy/oracle-setup.sh`: it installs Docker and Node 24, clones the
+   repo, builds `leetkob-sandbox:latest` and prepares `/etc/leetkob` and
+   `/var/log/leetkob`.
+5. Set env in `/etc/leetkob/worker.env` (mode 600): `DATABASE_URL`,
+   `GEMINI_API_KEY` (from Tùng), `MODEL_NAME`, `MODEL_SPEND_CAP_USD`,
+   `MODEL_TIMEOUT_MS`, `MODEL_CALL_LOG`, `WORKER_ID`, `POLL_INTERVAL_MS`,
+   `SANDBOX_IMAGE`. Template: `deploy/worker.env.example`.
+6. Install `deploy/leetkob-worker.service` and enable it **after** the queue
+   branch is merged. The worker runs on the host, not in a container, because
+   `src/sandbox/run.js` starts sandbox containers with the Docker CLI. Do not
+   use `docker compose up worker`: compose would also start a local Postgres,
+   and a worker container would need the Docker socket.
+7. Budget alert at 0 USD; do not upgrade to Pay As You Go.
 
 ## 4. Cron ping
 

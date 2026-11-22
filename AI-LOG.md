@@ -447,3 +447,37 @@
   `docker compose up --build` still needs a first run on the Oracle VM or a
   machine with Docker started.
 - Evidence: `test/unit/model-judge.test.js`; `npm test` 153/153.
+
+## 2026-11-22 — Tín — Claude (DeepSeek V4.1 Flash): Oracle VM runbook and worker unit
+
+- Task: turn the one-paragraph Oracle step in `docs/deploy.md` into something
+  Tín can follow while signing up, and make the VM reproducible.
+- Input: `docs/deploy.md` §3, `docker-compose.yml`, and Tùng's
+  `src/sandbox/run.js` on `tung/sandbox` (it spawns `docker run` with
+  `SANDBOX_IMAGE`, names containers `leetkob-sbx-*`, and needs the Docker CLI
+  on the host).
+- Result: `docs/oracle-vm.md` covers signup and card verification, home region,
+  A1 capacity versus the AMD micro, SSH keys from Windows, the security list,
+  the bootstrap script, the env file, systemd, Neon, Render, the 10-minute
+  cron, a verification sequence, cost guards, troubleshooting and the
+  fallback. Added `deploy/oracle-setup.sh` (idempotent: swap on small shapes,
+  Docker, Node 24, clone, `npm ci --omit=dev`, sandbox image, directories,
+  smoke tests), `deploy/leetkob-worker.service` (host service with
+  `SupplementaryGroups=docker`, restart and sandbox cleanup) and
+  `deploy/worker.env.example`.
+- Changed: the root `Dockerfile` now sets `HOST=0.0.0.0`; `src/main.js`
+  defaults to `127.0.0.1`, so the Render/Docker service would have refused
+  every external connection. `docs/deploy.md` now links the runbook and no
+  longer recommends `docker compose up worker` for production: compose would
+  start a local Postgres, and a worker container would need the Docker socket.
+- Rejected: mounting `/var/run/docker.sock` into a worker container so compose
+  could run it; the sandbox rules forbid that pattern and the host service
+  needs no socket mount.
+- Rejected: publishing ports 3000 or 5432 on the VM; the worker is outbound
+  only, so the security list keeps SSH from one IP.
+- Not verified: there is no Oracle account yet, so neither the script nor the
+  unit has run on a VM; the sandbox image was not built locally because the
+  Docker daemon was not running. `runWorker` is still a stub on `main`, so the
+  runbook tells the reader to enable the service only after Tùng merges.
+- Evidence: `docs/oracle-vm.md`, `deploy/*`; `npm test` 153/153, `npm run
+  lint`, `npm run format:check`, `npm run typecheck`.

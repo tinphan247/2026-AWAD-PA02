@@ -395,9 +395,11 @@
   the Oracle VM).
 - Order: the test commit `e5825b2` came first and was red (no `migrate.js`,
   no claim code); `3892f3d` makes it green.
-- Dependencies (AGENTS.md asks first): Tùng agreed to `pg` for Neon and
+- Dependencies (AGENTS.md asks first): the assistant asked; Tùng had not
+  decided, so it added the option it recommended, `pg` for Neon and
   `@electric-sql/pglite` (dev only) so `npm test` runs real SQL with the
-  network cut. `npm audit`: 0 vulnerabilities.
+  network cut, and the PR asks the team to confirm. `npm audit`: 0
+  vulnerabilities.
 - Changed: the first draft had a fixed 60 s lease. A judgement can outlast it
   (compile 10 s, 7 tests × 3 s wall, two model calls of up to 20 s), and a
   second worker would then judge the same submission. Added a heartbeat that

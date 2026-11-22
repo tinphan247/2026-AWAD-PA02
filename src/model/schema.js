@@ -18,6 +18,31 @@ export const UNSURE_REASONS = Object.freeze([
 ]);
 
 /**
+ * The `responseSchema` sent to Gemini's structured-output mode. It is the
+ * OpenAPI subset Gemini accepts, and it mirrors `validateVerdictOutput()`:
+ * the model may still answer badly, so the reply is validated again.
+ */
+export const VERDICT_RESPONSE_SCHEMA = Object.freeze({
+  type: 'object',
+  properties: {
+    verdict: { type: 'string', enum: [...VERDICT_VALUES] },
+    evidence: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          line: { type: 'integer' },
+          text: { type: 'string' },
+        },
+        required: ['line', 'text'],
+      },
+    },
+    reason: { type: 'string' },
+  },
+  required: ['verdict', 'evidence', 'reason'],
+});
+
+/**
  * Validate an untrusted model output. Returns a typed result so callers never
  * have to trust the shape.
  *

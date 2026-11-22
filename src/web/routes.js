@@ -588,7 +588,11 @@ export function createWebRoutes({ store, clock = { now: () => new Date() } }) {
         }
 
         const form = await readForm(req, 64 * 1024);
-        const decision = form.fields.decision === 'violation' ? 'violation' : 'pass';
+        const decision = form.fields.decision;
+        if (decision !== 'pass' && decision !== 'violation') {
+          sendError(res, 400, 'Quyết định của trợ giảng phải là pass hoặc violation.', { user });
+          return true;
+        }
         const evidence = parseEvidenceLines(form.fields.evidence ?? '');
         const error = validateDecision(decision, evidence);
         if (error !== null) {

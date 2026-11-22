@@ -240,6 +240,15 @@ test('the PA#3 flow: TA creates a lab, student submits, TA reviews and decides',
     });
     assert.equal(missingEvidence.status, 400);
 
+    const invalidDecision = await fetch(`${app.base}/ta/verdicts/${verdictId}`, {
+      method: 'POST',
+      headers: { cookie: ta, 'content-type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ decision: 'unsure', evidence: '' }).toString(),
+      redirect: 'manual',
+    });
+    assert.equal(invalidDecision.status, 400);
+    assert.equal(app.app.testing.webStore.findVerdict(verdictId)?.taDecision, null);
+
     const decided = await fetch(`${app.base}/ta/verdicts/${verdictId}`, {
       method: 'POST',
       headers: { cookie: ta, 'content-type': 'application/x-www-form-urlencoded' },

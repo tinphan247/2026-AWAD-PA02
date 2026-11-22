@@ -1,0 +1,16 @@
+# Keep the image small and free of local state.
+node_modules
+.git
+.github
+coverage
+data
+runs
+test
+sandbox
+leetkob-eval
+*.pdf
+*.md
+*.log
+.env
+.env.*
+!.env.example

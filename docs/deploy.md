@@ -14,8 +14,9 @@ Oracle worker.
 
 ## 2. Render (web)
 
-1. New Web Service, connect the GitHub repo, build from `Dockerfile` (or Node
-   runtime) on the `main` branch.
+1. New Web Service, connect the GitHub repo, build from the root `Dockerfile`
+   (recommended; it is also what `docker-compose.yml` builds) or use the Node
+   runtime with `npm ci && npm start`, on the `main` branch.
 2. Environment variables: `DATABASE_URL`, `PORT`. **Do not set `MODEL_API_KEY`
    or `GEMINI_API_KEY` here.**
 3. Health check path: `/healthz` (or `/health`).
@@ -66,3 +67,15 @@ If Render runs out of the 750 free hours or sleeps during marking, move the web
 service onto the Oracle VM: run `web` + `caddy` in the same `docker-compose.yml`,
 point `DATABASE_URL` at Neon, and update `PA3.md` with the new URL. No code
 changes are needed.
+
+## Local stack
+
+`docker-compose.yml` builds the root `Dockerfile` for both `web` and `worker`
+and starts `postgres:16`. It needs a running Docker daemon:
+
+```bash
+docker compose up --build
+```
+
+The web service is then on <http://127.0.0.1:3000>. `npm test` does not need
+this stack: it runs offline against the in-memory repo.

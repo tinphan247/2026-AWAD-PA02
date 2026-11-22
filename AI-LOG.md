@@ -435,11 +435,15 @@
   PA#3 flow, accounts and the model pipeline; `PA3.md` gained a local demo
   walkthrough, a cost projection and a video script link; added
   `PA3_PROGRESS.md` (per-person done/blocked board) and `docs/video-script.md`;
-  `.env.example` lists `MODEL_TIMEOUT_MS` and `MODEL_CALL_LOG`.
+  `.env.example` lists `MODEL_TIMEOUT_MS` and `MODEL_CALL_LOG`; added the root
+  `Dockerfile` and `.dockerignore` that `docker-compose.yml` already referenced.
 - Rejected: letting the judge call the model when the lab has reached its cost
   cap; it returns `cost_cap` without a network call.
 - Rejected: trusting the model's evidence text for the database or predictions
   file; the judge always writes the original line, trimmed.
 - Not verified: a real Gemini call (no key yet) and the worker wiring (Tùng's
-  branch). The judge is tested with an injected fake model only.
+  branch). The judge is tested with an injected fake model only. The Docker
+  daemon was not running, so the new root `Dockerfile` was not built locally;
+  `docker compose up --build` still needs a first run on the Oracle VM or a
+  machine with Docker started.
 - Evidence: `test/unit/model-judge.test.js`; `npm test` 153/153.

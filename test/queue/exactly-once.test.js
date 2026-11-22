@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 
 import { claimJob, completeJob, enqueueJob } from '../../src/queue/claim.js';
 import { idleDelay, processNextJob, runWorker } from '../../src/queue/worker.js';
+import { migrate } from '../../src/repo/migrate.js';
 import {
   countingJudge,
   createTestDb,
@@ -178,4 +179,55 @@ test('queue: an idle worker polls less often, up to a cap, so the database can s
   assert.equal(idleDelay(1, { pollIntervalMs: 1000, maxIdleDelayMs: 600_000 }), 2000);
   assert.equal(idleDelay(3, { pollIntervalMs: 1000, maxIdleDelayMs: 600_000 }), 8000);
   assert.equal(idleDelay(50, { pollIntervalMs: 1000, maxIdleDelayMs: 600_000 }), 600_000);
+});
+
+test('queue: a long judgement keeps its lease, so no second worker judges it meanwhile', async () => {
+  const db = await createTestDb();
+  const ids = await seedLab(db);
+  const submissionId = await insertSubmission(db, ids);
+  await enqueueJob(db, submissionId);
+  const { judge: fastJudge, calls } = countingJudge(ids.constraints);
+  /** @type {import('../../src/queue/worker.js').Judge} */
+  const slowJudge = async (submission) => {
+    await sleep(250); // five times the lease
+    return fastJudge(submission);
+  };
+
+  const slow = processNextJob({ db, workerId: 'w1', judge: slowJudge, leaseMs: 50 });
+  await sleep(150);
+  const meanwhile = await processNextJob({ db, workerId: 'w2', judge: fastJudge, leaseMs: 50 });
+
+  assert.equal(meanwhile, 'idle');
+  assert.equal(await slow, 'done');
+  assert.deepEqual(calls, [submissionId]);
+  assert.equal(await verdictCount(db, submissionId), 2);
+  await db.close();
+});
+
+test('queue: a worker that dies on the last attempt leaves a failed job, not a stuck one', async () => {
+  const db = await createTestDb();
+  const ids = await seedLab(db);
+  const { judge, calls } = countingJudge(ids.constraints);
+  const submissionId = await insertSubmission(db, ids);
+  await enqueueJob(db, submissionId);
+
+  assert.ok(await claimJob(db, 'wA', { leaseMs: 30, maxAttempts: 1 }));
+  await sleep(80);
+
+  assert.equal(await processNextJob({ db, workerId: 'wB', judge, maxAttempts: 1 }), 'idle');
+  assert.equal((await jobOf(db, submissionId))[0]?.status, 'failed');
+  assert.equal((await submissionStatus(db, submissionId)).status, 'error');
+  assert.deepEqual(calls, []);
+  await db.close();
+});
+
+test('queue: migrations apply once and are recorded', async () => {
+  const db = await createTestDb();
+  assert.deepEqual(await migrate(db), []);
+  const { rows } = await db.query('SELECT name FROM schema_migrations ORDER BY name');
+  assert.deepEqual(
+    rows.map((row) => row.name),
+    ['001_init.sql'],
+  );
+  await db.close();
 });

@@ -98,4 +98,28 @@ không thấy verdict constraint trước publish.
 - Call log (`src/model/calllog.js`): một dòng JSON mỗi lần gọi, gồm
   `requestId`, token vào/ra, latency, cost và **prompt đã ẩn danh**; không có
   tên, MSSV, email hay source gốc.
+- Pipeline (`src/model/judge.js`): ẩn danh → 1 constraint/lần → schema →
+  kiểm tra từng dòng evidence trên bản đã ẩn danh → lấy `text` từ **dòng gốc**
+  (để `eval.mjs` khớp). Timeout, schema sai, evidence lệch, cost cap đều thành
+  `unsure` kèm lý do; model không bao giờ đặt mức trừ.
 - **TODO**: điền số call/token/cost thực tế của lab demo sau khi chạy worker.
+
+## 9. Chạy thử local
+
+```bash
+npm ci
+npm run dev        # http://127.0.0.1:3000
+```
+
+Đăng nhập bằng token ở mục 2. Luồng demo:
+
+1. `ta1-token` → **Tạo lab mới** → nhập đề, constraint, chọn nhiều file
+   `NN.in`/`NN.out` → **Tạo lab**.
+2. `sv1-token`, `sv2-token`, `sv3-token` → mở lab → nộp 3 bài khác nhau.
+3. `ta1-token` → **Review** → tab queue/all → xem verdict, evidence, mức trừ →
+   quyết định `pass`/`violation` (violation cần evidence).
+4. `ta2-token` mở lab của lớp 1 → **403**.
+5. Student mở lại bài nộp → chỉ thấy trạng thái + kết quả test, không thấy
+   verdict constraint trước publish.
+
+`npm test` chạy offline, không cần Docker/Neon/mạng.

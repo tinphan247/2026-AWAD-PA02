@@ -417,3 +417,27 @@
 - Evidence: `npm test` 143/143, `npm run lint`, `npm run format:check`,
   `npm run typecheck`; `test/web/flow.test.js`, `test/unit/model-*.test.js`,
   `test/unit/review-queue.test.js`.
+
+## 2026-11-22 — Tín — Claude (DeepSeek V4.1 Flash): model judge pipeline and README
+
+- Task: finish the C4 integration point the worker will call, and document the
+  PA#3 prototype in the README.
+- Input: the plan review requirement that evidence text comes from the original
+  line, and the worker boundary agreed with Tùng (Tín does not edit
+  `src/queue/`).
+- Result: `src/model/judge.js` runs anonymise → one-constraint prompt →
+  structured call → schema check → evidence verification against the
+  anonymised code → mapping to the original line. Timeout, schema failure,
+  evidence mismatch, model error and cost cap all return `unsure` with a
+  reason; a model `pass` drops any evidence; a violation without evidence
+  becomes unsure. The call log keeps the anonymised prompt.
+- Changed: added `model_error` to `UNSURE_REASONS`; README now describes the
+  PA#3 flow, accounts and the model pipeline; `PA3.md` gained a local demo
+  walkthrough.
+- Rejected: letting the judge call the model when the lab has reached its cost
+  cap; it returns `cost_cap` without a network call.
+- Rejected: trusting the model's evidence text for the database or predictions
+  file; the judge always writes the original line, trimmed.
+- Not verified: a real Gemini call (no key yet) and the worker wiring (Tùng's
+  branch). The judge is tested with an injected fake model only.
+- Evidence: `test/unit/model-judge.test.js`; `npm test` 153/153.

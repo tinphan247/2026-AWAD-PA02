@@ -10,6 +10,7 @@ export const VERDICT_VALUES = Object.freeze(['pass', 'violation', 'unsure']);
 
 export const UNSURE_REASONS = Object.freeze([
   'model_unsure',
+  'model_error',
   'schema_invalid',
   'evidence_mismatch',
   'timeout',

@@ -423,3 +423,41 @@
   trailers were removed from this PR's commits before merge, keeping their
   dates; the commit ids above are the rewritten ones. Assistant use stays
   recorded here.
+
+## 2026-11-22 — Tùng — Claude (Claude Opus 5.5): queue and exactly-once
+
+- Task: criterion 2, queue half (PA3_PLAN.md §3.3, §4.2): schema migration,
+  Postgres claim and lease, worker loop, and the "stop the worker, submit,
+  start it again, judged exactly once" test. Sandbox code waits until the
+  team confirms who owns it (the plan says Tùng; Tín mentioned doing it with
+  the Oracle VM).
+- Order: the test commit `827bc6a` came first and was red (no `migrate.js`,
+  no claim code); `363e976` makes it green.
+- Dependencies (AGENTS.md asks first): the assistant asked; Tùng had not
+  decided, so it added the option it recommended, `pg` for Neon and
+  `@electric-sql/pglite` (dev only) so `npm test` runs real SQL with the
+  network cut, and the PR asks the team to confirm. `npm audit`: 0
+  vulnerabilities.
+- Changed: the first draft had a fixed 60 s lease. A judgement can outlast it
+  (compile 10 s, 7 tests × 3 s wall, two model calls of up to 20 s), and a
+  second worker would then judge the same submission. Added a heartbeat that
+  extends the lease, a 120 s default, and a test with a judge five times
+  slower than the lease.
+- Changed: a worker dying on its last attempt left the job `claimed` forever,
+  because only jobs under the attempt limit are claimable. The claim now
+  marks those jobs `failed` and the submission `error`; test added.
+- Changed: idle polling backs off (1 s doubling up to `WORKER_MAX_IDLE_MS`),
+  following the Neon CU-hour risk in PA3_PLAN.md §3.1.
+- Rejected: an in-memory fake repo for the exactly-once test; it would not
+  exercise the SQL that gives exactly-once (`SKIP LOCKED`, the unique keys,
+  the `claimed_by` guard).
+- Rejected: running the test against Neon; marking cuts the network.
+- Verified: all four checks pass locally on Node 24 (134 tests); the queue
+  tests pass with the network removed (`unshare -n`).
+- Not verified: pglite has one connection, so "two workers polling at once"
+  checks the SQL guards but not two sessions racing for a row lock; that and
+  the migration on Neon need a run with the real `DATABASE_URL`.
+- Note: at Tùng's request, the `Co-Authored-By: Claude` and `Claude-Session`
+  trailers were removed from this PR's commits before merge, keeping their
+  dates; the commit ids above are the rewritten ones. Assistant use stays
+  recorded here.

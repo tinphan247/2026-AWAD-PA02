@@ -1,0 +1,12 @@
+[
+  {
+    "id": "C1",
+    "text": "Do not call a library sort function: `std::sort`, `std::stable_sort`, `std::partial_sort`, `std::nth_element`, `std::ranges::sort`, `qsort`.",
+    "deduction": 3
+  },
+  {
+    "id": "C2",
+    "text": "Sort with an insertion sort you wrote yourself: take the elements one by one and insert each into its place in the already-sorted prefix (iterative or recursive). Any other algorithm (a library sort, selection sort, bubble sort, merge sort) does not satisfy this constraint, whatever the function is called.",
+    "deduction": 4
+  }
+]

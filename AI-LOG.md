@@ -541,3 +541,17 @@
   macro.
 - Not verified: the run with the model (`runs/pa3-dev/`, `calls.jsonl`),
   which waits for the model client (criterion 4, Tín).
+- Changed (after reading the PA#3 rubric): the README had no checker
+  section, and criterion 6 asks that "the README gives the command and a
+  Dockerfile". It now has the command, `MODEL_OFF=1`, and the build and
+  run lines.
+- Changed: the image ran as `node` (uid 1000). The markers mount their own
+  output folder, and a folder owned by another uid made the run fail with
+  `EACCES` before any prediction was written. The assistant reproduced
+  this with a folder owned by uid 4242 and removed the `USER` line, then
+  ran the same folder again and the run succeeded. The checker never runs
+  submissions and runs with `--network none`, so root inside it gives the
+  checker nothing it can reach.
+- Decided (Tuệ): the real-model run `runs/pa3-dev/` waits for Tín to wire
+  the model client into the checker's `semantic` hook (criterion 4), rather
+  than this PR calling the model.

@@ -116,7 +116,11 @@ const MACRO_WRAPPER = 'void __leetkob_macro__() {\n';
  */
 export function checkSource(parser, source, banList) {
   const sourceLines = source.split('\n').map((l) => l.replace(/\r$/, ''));
-  const tree = parser.parse(source);
+  // The compiler joins `\`-newline lines before it reads any token, so
+  // `std::so\` + `rt(...)` is `std::sort`. The parser sees the joined text;
+  // `originalLine` turns its line numbers back into the student's.
+  const { text, originalLine } = spliceLines(source);
+  const tree = parser.parse(text);
   if (!tree) return result('unsure', [], sourceLines);
 
   const file = describeFile(parser, tree.rootNode);
@@ -138,9 +142,12 @@ export function checkSource(parser, source, banList) {
     }
   }
 
-  const sure = uniqueLines(hits.filter((h) => h.sure));
+  const sure = uniqueLines(
+    hits.filter((h) => h.sure),
+    originalLine,
+  );
   if (sure.length > 0) return result('violation', sure, sourceLines);
-  const doubt = uniqueLines(hits);
+  const doubt = uniqueLines(hits, originalLine);
   if (doubt.length > 0 || banList.unknown.length > 0) return result('unsure', doubt, sourceLines);
   return result('pass', [], sourceLines);
 }
@@ -160,9 +167,39 @@ function result(verdict, lines, sourceLines) {
   };
 }
 
-/** @param {Hit[]} hits */
-function uniqueLines(hits) {
-  return [...new Set(hits.map((h) => h.line))].sort((a, b) => a - b);
+/**
+ * @param {Hit[]} hits
+ * @param {number[]} originalLine joined line (1-based) to the student's line
+ */
+function uniqueLines(hits, originalLine) {
+  return [...new Set(hits.map((h) => originalLine[h.line] ?? h.line))].sort((a, b) => a - b);
+}
+
+/**
+ * Join every backslash-newline pair (LF or CRLF), as translation phase 2 does.
+ * Strings and comments are joined too, which is also what the compiler does:
+ * a `//` comment ending in `\` swallows the next line.
+ * @param {string} source
+ * @returns {{ text: string, originalLine: number[] }} `originalLine[n]` is the
+ *   line of the source where line `n` of `text` starts (index 0 unused).
+ */
+function spliceLines(source) {
+  const originalLine = [0, 1];
+  let line = 1;
+  let text = '';
+  let from = 0;
+  for (const match of source.matchAll(/\\\r?\n|\n/g)) {
+    const end = match.index + match[0].length;
+    line += 1;
+    if (match[0] === '\n') {
+      text += source.slice(from, end);
+      originalLine.push(line);
+    } else {
+      text += source.slice(from, match.index); // a splice: drop it, no new line
+    }
+    from = end;
+  }
+  return { text: text + source.slice(from), originalLine };
 }
 
 /** @param {TsNode} node */

@@ -555,3 +555,15 @@
 - Decided (Tuệ): the real-model run `runs/pa3-dev/` waits for Tín to wire
   the model client into the checker's `semantic` hook (criterion 4), rather
   than this PR calling the model.
+- Changed (cross-review, Tùng): the README run command now drops all Linux
+  capabilities and blocks new privileges. Tùng suggested
+  `--cap-drop ALL --security-opt no-new-privileges`. Tuệ ran it against a
+  volume owned by uid 4242: with `--cap-drop ALL` alone the run fails with
+  `EACCES` on `/out/predictions.jsonl.tmp`, because root without
+  `DAC_OVERRIDE` cannot write into another uid's folder. With
+  `--cap-add DAC_OVERRIDE` the run writes 102 predictions (pass 40, violation
+  15, unsure 47), the same as before. The README keeps that one capability
+  and says why.
+- Decided (Tuệ): keep `pg` in the image for now. It is a production
+  dependency of the app, not of the checker, and removing it changes
+  dependencies or the install step; Tùng marked it minor.

@@ -62,9 +62,19 @@ Docker image, run with the model off and the network cut:
 ```bash
 docker build -f Dockerfile.checker -t leetkob-checker .
 docker run --rm --network none --memory 1g --pids-limit 256 \
+  --cap-drop ALL --cap-add DAC_OVERRIDE --security-opt no-new-privileges \
   -v "$PWD/leetkob-eval:/data:ro" -v "$PWD/runs/out:/out" \
   -e MODEL_OFF=1 leetkob-checker --dataset /data --out /out/predictions.jsonl
 ```
+
+The image has no `USER` line, so the process is root inside the container (the
+output folder you mount may belong to any uid). `--cap-drop ALL` removes every
+Linux capability from that root and `--security-opt no-new-privileges` stops
+the process from gaining any later. The one capability kept is
+`DAC_OVERRIDE`: without it root cannot write into an output folder owned by
+another uid (`EACCES` on `/out/predictions.jsonl.tmp`, checked with a volume
+owned by uid 4242). If your output folder is writable by the container's uid,
+you can drop it too.
 
 Committed runs:
 

@@ -13,5 +13,7 @@ COPY package.json package-lock.json ./
 RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
 COPY bin ./bin
 COPY src ./src
-USER node
+# No USER line on purpose: the markers mount their own output folder, owned
+# by whatever uid they have, and the checker must be able to write there. It
+# only parses code (it never runs a submission) and runs with --network none.
 ENTRYPOINT ["node", "bin/check.mjs"]

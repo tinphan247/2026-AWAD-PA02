@@ -502,3 +502,21 @@
 - Not verified: the held-out set; wiring the rules into the worker's judge
   (Tín); the small fixtures in `matchers.test.js` are snippets, not
   programs compiled with g++.
+- Changed (cross-review, Tùng): a backslash-newline splice no longer hides a
+  banned name. `std::so\` + `rt(a, a + 3);` compiles with g++ to `std::sort`
+  but the rule returned `pass`, so the model was never asked. The source is
+  now joined the way the compiler joins it (LF and CRLF) before parsing, and a
+  line map turns every hit back into the student's own line, so the evidence
+  still shows the original text. Tests were written first and failed for the
+  two splice cases; four guard cases (splice inside a string, a `//` comment
+  ended by a splice, a plain `'\'`, line numbers after an earlier splice)
+  pass before and after.
+- Rejected: returning `unsure` whenever a splice appears. It is safe but
+  gives up a verdict the rule can pin down, and "outside comments and
+  strings" cannot be told without the parse that the splice defeats.
+- Not verified: a splice inside a raw string (`R"(...)"`), where the compiler
+  undoes the splice; the joined text only changes string contents there, which
+  never match. The CRLF case is tested; a lone `\r` line ending is not.
+- Verified: four checks green on Node 24.22.3 (203 tests, 12 Docker attack
+  tests skipped); the dev set still gives 15 of 15 violations and 0 wrongful
+  deductions.

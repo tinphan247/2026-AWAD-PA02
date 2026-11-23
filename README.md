@@ -30,7 +30,15 @@ npm test
 ```
 
 These are the exact commands CI runs. A fresh clone that follows this README
-must be green.
+must be green. `npm test` needs no network, Docker or database.
+
+Sandbox attack tests (PA#3 criterion 2) need Docker and run in the CI job
+`sandbox`:
+
+```bash
+docker build -t leetkob-sandbox:test sandbox
+npm run test:sandbox
+```
 
 Local development:
 

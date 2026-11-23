@@ -14,7 +14,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
-    "test": "node --test --test-reporter=spec"
+    "test": "node --test --test-reporter=spec",
+    "test:sandbox": "node --test --test-reporter=spec test/sandbox/attacks.test.js"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.17",

@@ -386,6 +386,44 @@
   workspace, and could not see the CI status of `feat/pa3-scaffold`.
 - Evidence: [PR #13](https://github.com/tinphan247/2026-AWAD-PA02/pull/13).
 
+## 2026-11-22 — Tùng — Claude (Claude Opus 5.5): sandbox and the nine attacks
+
+- Task: criterion 2, sandbox half (PA3_PLAN.md §4.2, §4.7 row 1): sandbox
+  image and runner, one attack submission per minimum, compile inside the
+  sandbox, CI job. Ownership confirmed with Tín: he creates the Oracle
+  account and VM; the sandbox code is Tùng's.
+- Order: `f5e8dbe` (tests, red: no runner) → `d1cb18e` (runner, green) →
+  `88dfb82` (CI job and `test:sandbox`, which Tùng approved first because
+  AGENTS.md asks before changing scripts and CI).
+- Changed: the first runner piped the program's stdout into `head -c` to cap
+  output. The wall-clock attack (a child that calls `setsid()` and sleeps)
+  and the fork attack (children that `pause()`) kept the pipe open, so the
+  runner hung until the worker's deadline. Output now goes to a file capped
+  by `ulimit -f`, and the runner, as PID 1, kills every stray process after
+  each test.
+- Changed: a missing image made every run look like the student's TLE. A
+  container that never prints `COMPILE` now throws, so the queue retries the
+  job instead of storing a verdict.
+- Changed: `/tmp` as tmpfs was not writable by uid 1000; the mount now sets
+  `mode=1777`.
+- Rejected: copying expected outputs into the container to compare there; a
+  submission could read them and print the answers. The worker compares.
+- Rejected: an "allocate 1 GiB" attack without reading the memory back; the
+  compiler can drop it. The attack writes every page and prints a checksum.
+- Verified: `npm run test:sandbox` 12/12 locally; four checks green; with the
+  network removed and loopback up, `npm test` passes (134, 12 skipped).
+  Negative controls: with `-e MODEL_API_KEY=...`, a mounted Docker socket,
+  `--pids-limit=400` or `--user=0:0`, the matching attack prints `LEAK`; the
+  1 GiB attack ends as MLE.
+- Not verified locally: Docker Hub is blocked in the assistant's workspace,
+  so the local image was built on an Ubuntu 24.04 g++ 13 base instead of
+  `gcc:13`; CI uses `gcc:13`. The network attack's negative control needs a
+  host with internet; CI has it.
+- Note: at Tùng's request, the `Co-Authored-By: Claude` and `Claude-Session`
+  trailers were removed from this PR's commits before merge, keeping their
+  dates; the commit ids above are the rewritten ones. Assistant use stays
+  recorded here.
+
 ## 2026-11-22 — Tùng — Claude (Claude Opus 5.5): queue and exactly-once
 
 - Task: criterion 2, queue half (PA3_PLAN.md §3.3, §4.2): schema migration,

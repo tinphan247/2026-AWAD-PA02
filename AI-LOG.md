@@ -461,3 +461,62 @@
   trailers were removed from this PR's commits before merge, keeping their
   dates; the commit ids above are the rewritten ones. Assistant use stays
   recorded here.
+
+## 2026-11-23 — Tuệ — Claude Code (Claude Opus 5.5): hard rules
+
+- Task: criterion 3 (PA3_PLAN.md §4.3): decide ban-list constraints with a
+  syntax-aware rule before the model, in `src/checker/hard-rules/`, shared by
+  the worker and the checker command.
+- Order: the test commit `e6ca1c2` came first and was red (no module);
+  `e42cc84` makes it green.
+- Dependencies (AGENTS.md asks first): the assistant asked; Tuệ approved
+  `web-tree-sitter@0.27.2` and `tree-sitter-cpp@0.23.4`, pinned exactly.
+  Only the grammar's `.wasm` file is used; the optional native `tree-sitter`
+  peer is not installed. `npm audit`: 0 vulnerabilities.
+- Approach: Tuệ chose to walk the syntax tree with a table of the names the
+  student declares, and to answer `unsure` whenever the rule cannot pin a
+  use down, so the risk falls on the unsure rate and not on wrongful
+  deductions.
+- Changed: a fresh assistant reviewed the design before any code and found
+  five gaps; each was settled in favour of `unsure`: a macro, typedef or
+  `using` that names a banned function but is never used is `unsure`, not a
+  violation; a bare name only drops `std::`, so banning `std::ranges::sort`
+  does not flag a plain `sort()`; a nested type that only ends like a banned
+  one (`std::vector<int>::reverse_iterator`) is `unsure`; a backticked item
+  the rule cannot read makes the constraint `unsure`, never a silent `pass`;
+  the result carries `decidedBy: 'hard_rule'` as evidence that the model was
+  not asked.
+- Changed: code inside `#if`/`#ifdef` blocks may never be compiled, so a
+  banned name there is `unsure` (added while writing the code).
+- Rejected: a full symbol table that models C++ name lookup; about three
+  times the work before the deadline, with more room for new bugs.
+- Rejected: a hand-written C++ tokenizer instead of a dependency; scope
+  (`namespace my { void sort... }`) would be guesswork, and the rubric asks
+  for a syntax-aware rule.
+- Rejected: the native `tree-sitter` binding; it needs node-gyp and has no
+  prebuild for the Alpine checker image.
+- Verified: all four checks pass on Node 24.22.3 (Tuệ upgraded from 22 for
+  this). On the 55 ban-list pairs of the dev set: 15 of 15 violations caught
+  with a labelled line and its exact text, 40 passes, 0 wrongful
+  deductions, 0 unsure (`test/hard-rules/dev-set.test.js`).
+- Not verified: the held-out set; wiring the rules into the worker's judge
+  (Tín); the small fixtures in `matchers.test.js` are snippets, not
+  programs compiled with g++.
+- Changed (cross-review, Tùng): a backslash-newline splice no longer hides a
+  banned name. `std::so\` + `rt(a, a + 3);` compiles with g++ to `std::sort`
+  but the rule returned `pass`, so the model was never asked. The source is
+  now joined the way the compiler joins it (LF and CRLF) before parsing, and a
+  line map turns every hit back into the student's own line, so the evidence
+  still shows the original text. Tests were written first and failed for the
+  two splice cases; four guard cases (splice inside a string, a `//` comment
+  ended by a splice, a plain `'\'`, line numbers after an earlier splice)
+  pass before and after.
+- Rejected: returning `unsure` whenever a splice appears. It is safe but
+  gives up a verdict the rule can pin down, and "outside comments and
+  strings" cannot be told without the parse that the splice defeats.
+- Not verified: a splice inside a raw string (`R"(...)"`), where the compiler
+  undoes the splice; the joined text only changes string contents there, which
+  never match. The CRLF case is tested; a lone `\r` line ending is not.
+- Verified: four checks green on Node 24.22.3 (203 tests, 12 Docker attack
+  tests skipped); the dev set still gives 15 of 15 violations and 0 wrongful
+  deductions.

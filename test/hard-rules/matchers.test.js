@@ -8,6 +8,9 @@ import { createHardRules, parseBanList } from '../../src/checker/hard-rules/inde
 
 const rules = await createHardRules();
 
+/** One backslash, so a fixture shows a line splice without escape arithmetic. */
+const BS = '\\';
+
 const SORT =
   'Do not call a library sort function: `std::sort`, `std::stable_sort`, `std::ranges::sort`, `qsort`.';
 const LOOPS =
@@ -281,4 +284,42 @@ test('hard rule: a banned name inside code the parser could not read is unsure, 
 test('hard rule: Windows line endings do not change the evidence text', () => {
   const result = check(SORT, 'int main() {\r\n  std::sort(a, a + n);\r\n}\r\n');
   assert.deepEqual(result.evidence, [{ line: 2, text: '  std::sort(a, a + n);' }]);
+});
+
+test('hard rule: a banned name split by a backslash-newline splice is still a violation', () => {
+  const result = check(SORT, `int main() {\n  std::so${BS}\nrt(a, a + 3);\n}\n`);
+  assert.equal(result.verdict, 'violation');
+  assert.deepEqual(lines(result), [2]);
+  assert.equal(result.evidence[0]?.text, `  std::so${BS}`);
+});
+
+test('hard rule: a splice written with CRLF line endings joins the name too', () => {
+  const result = check(SORT, `int main() {\r\n  std::so${BS}\r\nrt(a, a + 3);\r\n}\r\n`);
+  assert.equal(result.verdict, 'violation');
+  assert.deepEqual(lines(result), [2]);
+});
+
+test('hard rule: evidence keeps the original line number after an earlier splice', () => {
+  const result = check(
+    SORT,
+    `#define TWO 1 + ${BS}\n  1\nint main() {\n  std::sort(a, a + n);\n}\n`,
+  );
+  assert.equal(result.verdict, 'violation');
+  assert.deepEqual(lines(result), [4]);
+  assert.equal(result.evidence[0]?.text, '  std::sort(a, a + n);');
+});
+
+test('hard rule: a banned name inside a string is not matched, even when a splice joins it', () => {
+  const result = check(SORT, `int main() {\n  const char* s = "std::so${BS}\nrt";\n}\n`);
+  assert.equal(result.verdict, 'pass');
+});
+
+test('hard rule: a line comment ended by a splice swallows the next line, as the compiler reads it', () => {
+  const result = check(SORT, `int main() {\n  // note ${BS}\n  std::sort(a, a + n);\n}\n`);
+  assert.equal(result.verdict, 'pass');
+});
+
+test('hard rule: a backslash that does not end a line changes nothing', () => {
+  const result = check(SORT, `int main() {\n  char c = '${BS}${BS}';\n  std::sort(a, a + n);\n}\n`);
+  assert.deepEqual(lines(result), [3]);
 });

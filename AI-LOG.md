@@ -502,3 +502,42 @@
 - Not verified: the held-out set; wiring the rules into the worker's judge
   (Tín); the small fixtures in `matchers.test.js` are snippets, not
   programs compiled with g++.
+
+## 2026-11-23 — Tuệ — Claude Code (Claude Opus 5.5): checker command and own cases
+
+- Task: criterion 6 (PA3_PLAN.md §4.6): `bin/check.mjs` on a dataset folder,
+  `Dockerfile.checker`, a committed `MODEL_OFF=1` dev run, and our own cases
+  in `leetkob-eval-extra/`.
+- Order: the test commit `dda87e0` came first and was red (no decisions
+  file, no argument check); `d9482f0` makes it green. The own cases
+  (`dde8876`) and the dev run (`39886db`) follow.
+- Changed: a no-network check was added that the plan did not ask for. A
+  preload replaces `fetch`, `net`, `tls`, `http`, `https` and `dns` with
+  functions that throw, so a passing `MODEL_OFF=1` test proves that no
+  connection was opened. The first version passed a Windows path to
+  `--import` and every test failed for that reason alone; the path is now
+  a file URL.
+- Changed: `decisions.jsonl` sits next to `predictions.jsonl` and records
+  `decided_by` and `model_called` for each pair, so a run shows that no
+  ban-list pair reached the model. Extra fields stay out of the predictions,
+  so the input eval.mjs checks is unchanged.
+- Changed: the image installs with `--ignore-scripts`, copies only `bin/`
+  and `src/`, and runs as `node`. Built and run with `--network none`, it
+  gives the same 102 predictions as a local run.
+- Changed: the first eval report printed the absolute path of a team
+  member's local folder. `eval.mjs` was run again in a `node:24-alpine`
+  container, so the committed report shows `/repo/...`.
+- Rejected: a checker that quietly treats a configured model key as
+  working. The model client is not wired in yet, so the command prints a
+  note and semantic pairs stay `unsure`.
+- Rejected: running the own cases' C++ in CI outside the sandbox. They
+  were compiled and run once locally (g++ 13.1, `-std=c++17 -O2`); all six
+  are Accepted on the five tests.
+- Verified: four checks green on Node 24.22.3 (210 tests, 12 Docker attack
+  tests skipped). Dev run with the model off: 0 wrongful deductions; on the
+  55 ban-list pairs recall is 100% and unsure is 0%; overall FAIL, recall
+  40.5% and unsure 46.1%, because the 47 semantic pairs are `unsure`.
+  Own cases: all 6 ban-list pairs right, including the injection and the
+  macro.
+- Not verified: the run with the model (`runs/pa3-dev/`, `calls.jsonl`),
+  which waits for the model client (criterion 4, Tín).

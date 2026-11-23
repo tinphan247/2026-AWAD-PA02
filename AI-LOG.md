@@ -567,3 +567,20 @@
 - Decided (Tuệ): keep `pg` in the image for now. It is a production
   dependency of the app, not of the checker, and removing it changes
   dependencies or the install step; Tùng marked it minor.
+- Changed (cross-review, Tùng): the no-network preload now also blocks
+  `net.Socket.prototype.connect`, `http2.connect`, `dgram`, the global
+  `WebSocket` and `EventSource`, every `dns` function (callback, `promises`
+  and `Resolver`) and `child_process`, which Tùng listed as uncovered. A new
+  test, `no-network.test.js`, tries each channel in a child process and
+  expects "network blocked by test", so a channel that stays open fails the
+  test; before this, the preload itself was untested.
+- Found by that test: the first version replaced `WebSocket` with an arrow
+  function, which cannot be called with `new`, so it failed with "not a
+  constructor" instead of the block message. It is now a class that throws in
+  its constructor.
+- Rejected: claiming the preload is a sandbox. It is a test guard (a native
+  addon or deleting the patches gets around it); the header says so, and the
+  `--network none` Docker run remains the real proof.
+- Verified: four checks green on Node 24.22.3 (234 tests, 12 Docker attack
+  tests skipped); the 9 model-off checker tests still pass with the wider
+  block.

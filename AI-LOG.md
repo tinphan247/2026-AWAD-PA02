@@ -520,3 +520,85 @@
 - Verified: four checks green on Node 24.22.3 (203 tests, 12 Docker attack
   tests skipped); the dev set still gives 15 of 15 violations and 0 wrongful
   deductions.
+
+## 2026-11-23 — Tuệ — Claude Code (Claude Opus 5.5): checker command and own cases
+
+- Task: criterion 6 (PA3_PLAN.md §4.6): `bin/check.mjs` on a dataset folder,
+  `Dockerfile.checker`, a committed `MODEL_OFF=1` dev run, and our own cases
+  in `leetkob-eval-extra/`.
+- Order: the test commit `dda87e0` came first and was red (no decisions
+  file, no argument check); `d9482f0` makes it green. The own cases
+  (`dde8876`) and the dev run (`39886db`) follow.
+- Changed: a no-network check was added that the plan did not ask for. A
+  preload replaces `fetch`, `net`, `tls`, `http`, `https` and `dns` with
+  functions that throw, so a passing `MODEL_OFF=1` test proves that no
+  connection was opened. The first version passed a Windows path to
+  `--import` and every test failed for that reason alone; the path is now
+  a file URL.
+- Changed: `decisions.jsonl` sits next to `predictions.jsonl` and records
+  `decided_by` and `model_called` for each pair, so a run shows that no
+  ban-list pair reached the model. Extra fields stay out of the predictions,
+  so the input eval.mjs checks is unchanged.
+- Changed: the image installs with `--ignore-scripts`, copies only `bin/`
+  and `src/`, and runs as `node`. Built and run with `--network none`, it
+  gives the same 102 predictions as a local run.
+- Changed: the first eval report printed the absolute path of a team
+  member's local folder. `eval.mjs` was run again in a `node:24-alpine`
+  container, so the committed report shows `/repo/...`.
+- Rejected: a checker that quietly treats a configured model key as
+  working. The model client is not wired in yet, so the command prints a
+  note and semantic pairs stay `unsure`.
+- Rejected: running the own cases' C++ in CI outside the sandbox. They
+  were compiled and run once locally (g++ 13.1, `-std=c++17 -O2`); all six
+  are Accepted on the five tests.
+- Verified: four checks green on Node 24.22.3 (210 tests, 12 Docker attack
+  tests skipped). Dev run with the model off: 0 wrongful deductions; on the
+  55 ban-list pairs recall is 100% and unsure is 0%; overall FAIL, recall
+  40.5% and unsure 46.1%, because the 47 semantic pairs are `unsure`.
+  Own cases: all 6 ban-list pairs right, including the injection and the
+  macro.
+- Not verified: the run with the model (`runs/pa3-dev/`, `calls.jsonl`),
+  which waits for the model client (criterion 4, Tín).
+- Changed (after reading the PA#3 rubric): the README had no checker
+  section, and criterion 6 asks that "the README gives the command and a
+  Dockerfile". It now has the command, `MODEL_OFF=1`, and the build and
+  run lines.
+- Changed: the image ran as `node` (uid 1000). The markers mount their own
+  output folder, and a folder owned by another uid made the run fail with
+  `EACCES` before any prediction was written. The assistant reproduced
+  this with a folder owned by uid 4242 and removed the `USER` line, then
+  ran the same folder again and the run succeeded. The checker never runs
+  submissions and runs with `--network none`, so root inside it gives the
+  checker nothing it can reach.
+- Decided (Tuệ): the real-model run `runs/pa3-dev/` waits for Tín to wire
+  the model client into the checker's `semantic` hook (criterion 4), rather
+  than this PR calling the model.
+- Changed (cross-review, Tùng): the README run command now drops all Linux
+  capabilities and blocks new privileges. Tùng suggested
+  `--cap-drop ALL --security-opt no-new-privileges`. Tuệ ran it against a
+  volume owned by uid 4242: with `--cap-drop ALL` alone the run fails with
+  `EACCES` on `/out/predictions.jsonl.tmp`, because root without
+  `DAC_OVERRIDE` cannot write into another uid's folder. With
+  `--cap-add DAC_OVERRIDE` the run writes 102 predictions (pass 40, violation
+  15, unsure 47), the same as before. The README keeps that one capability
+  and says why.
+- Decided (Tuệ): keep `pg` in the image for now. It is a production
+  dependency of the app, not of the checker, and removing it changes
+  dependencies or the install step; Tùng marked it minor.
+- Changed (cross-review, Tùng): the no-network preload now also blocks
+  `net.Socket.prototype.connect`, `http2.connect`, `dgram`, the global
+  `WebSocket` and `EventSource`, every `dns` function (callback, `promises`
+  and `Resolver`) and `child_process`, which Tùng listed as uncovered. A new
+  test, `no-network.test.js`, tries each channel in a child process and
+  expects "network blocked by test", so a channel that stays open fails the
+  test; before this, the preload itself was untested.
+- Found by that test: the first version replaced `WebSocket` with an arrow
+  function, which cannot be called with `new`, so it failed with "not a
+  constructor" instead of the block message. It is now a class that throws in
+  its constructor.
+- Rejected: claiming the preload is a sandbox. It is a test guard (a native
+  addon or deleting the patches gets around it); the header says so, and the
+  `--network none` Docker run remains the real proof.
+- Verified: four checks green on Node 24.22.3 (234 tests, 12 Docker attack
+  tests skipped); the 9 model-off checker tests still pass with the wider
+  block.

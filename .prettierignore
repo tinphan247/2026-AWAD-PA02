@@ -5,3 +5,4 @@ package-lock.json
 *.pdf
 *.md
 leetkob-eval/
+runs/

@@ -67,7 +67,61 @@ npm test
 ```
 
 These are the exact commands CI runs. A fresh clone that follows this README
-must be green.
+must be green. `npm test` needs no network, Docker or database.
+
+Sandbox attack tests (PA#3 criterion 2) need Docker and run in the CI job
+`sandbox`:
+
+```bash
+docker build -t leetkob-sandbox:test sandbox
+npm run test:sandbox
+```
+
+## Checker command (PA#3 criterion 6)
+
+One command line takes a dataset folder (the layout of `leetkob-eval/`) and
+writes the prediction file, plus `decisions.jsonl` next to it (who decided
+each pair, and whether the model was called). It works from `statement.md`
+and `constraints.json` alone; `labels.jsonl` is never read.
+
+```bash
+node bin/check.mjs --dataset leetkob-eval --out runs/out/predictions.jsonl
+node leetkob-eval/eval.mjs --data leetkob-eval --predictions runs/out/predictions.jsonl
+```
+
+**Model-off switch: `MODEL_OFF=1`.** Ban-list constraints are decided by the
+hard rules (`src/checker/hard-rules/`, tree-sitter), every semantic
+constraint is `unsure`, and no network connection is opened. Without a
+`MODEL_API_KEY` the checker behaves the same way.
+
+Docker image, run with the model off and the network cut:
+
+```bash
+docker build -f Dockerfile.checker -t leetkob-checker .
+docker run --rm --network none --memory 1g --pids-limit 256 \
+  --cap-drop ALL --cap-add DAC_OVERRIDE --security-opt no-new-privileges \
+  -v "$PWD/leetkob-eval:/data:ro" -v "$PWD/runs/out:/out" \
+  -e MODEL_OFF=1 leetkob-checker --dataset /data --out /out/predictions.jsonl
+```
+
+The image has no `USER` line, so the process is root inside the container (the
+output folder you mount may belong to any uid). `--cap-drop ALL` removes every
+Linux capability from that root and `--security-opt no-new-privileges` stops
+the process from gaining any later. The one capability kept is
+`DAC_OVERRIDE`: without it root cannot write into an output folder owned by
+another uid (`EACCES` on `/out/predictions.jsonl.tmp`, checked with a volume
+owned by uid 4242). If your output folder is writable by the container's uid,
+you can drop it too.
+
+Committed runs:
+
+- [`runs/pa3-dev-model-off/`](runs/pa3-dev-model-off/README.md): the image
+  above on the dev set. 0 wrongful deductions; every ban-list pair decided.
+- `runs/pa3-dev/`: the real-model run, added once the model client is wired
+  into the checker.
+
+Our own cases, same layout, scored with the same `eval.mjs`:
+[`leetkob-eval-extra/`](leetkob-eval-extra/README.md).
 
 Local development:
 

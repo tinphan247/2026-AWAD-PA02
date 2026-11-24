@@ -481,3 +481,220 @@
   runbook tells the reader to enable the service only after Tùng merges.
 - Evidence: `docs/oracle-vm.md`, `deploy/*`; `npm test` 153/153, `npm run
   lint`, `npm run format:check`, `npm run typecheck`.
+
+## 2026-11-22 — Tùng — Claude (Claude Opus 5.5): sandbox and the nine attacks
+
+- Task: criterion 2, sandbox half (PA3_PLAN.md §4.2, §4.7 row 1): sandbox
+  image and runner, one attack submission per minimum, compile inside the
+  sandbox, CI job. Ownership confirmed with Tín: he creates the Oracle
+  account and VM; the sandbox code is Tùng's.
+- Order: `f5e8dbe` (tests, red: no runner) → `d1cb18e` (runner, green) →
+  `88dfb82` (CI job and `test:sandbox`, which Tùng approved first because
+  AGENTS.md asks before changing scripts and CI).
+- Changed: the first runner piped the program's stdout into `head -c` to cap
+  output. The wall-clock attack (a child that calls `setsid()` and sleeps)
+  and the fork attack (children that `pause()`) kept the pipe open, so the
+  runner hung until the worker's deadline. Output now goes to a file capped
+  by `ulimit -f`, and the runner, as PID 1, kills every stray process after
+  each test.
+- Changed: a missing image made every run look like the student's TLE. A
+  container that never prints `COMPILE` now throws, so the queue retries the
+  job instead of storing a verdict.
+- Changed: `/tmp` as tmpfs was not writable by uid 1000; the mount now sets
+  `mode=1777`.
+- Rejected: copying expected outputs into the container to compare there; a
+  submission could read them and print the answers. The worker compares.
+- Rejected: an "allocate 1 GiB" attack without reading the memory back; the
+  compiler can drop it. The attack writes every page and prints a checksum.
+- Verified: `npm run test:sandbox` 12/12 locally; four checks green; with the
+  network removed and loopback up, `npm test` passes (134, 12 skipped).
+  Negative controls: with `-e MODEL_API_KEY=...`, a mounted Docker socket,
+  `--pids-limit=400` or `--user=0:0`, the matching attack prints `LEAK`; the
+  1 GiB attack ends as MLE.
+- Not verified locally: Docker Hub is blocked in the assistant's workspace,
+  so the local image was built on an Ubuntu 24.04 g++ 13 base instead of
+  `gcc:13`; CI uses `gcc:13`. The network attack's negative control needs a
+  host with internet; CI has it.
+- Note: at Tùng's request, the `Co-Authored-By: Claude` and `Claude-Session`
+  trailers were removed from this PR's commits before merge, keeping their
+  dates; the commit ids above are the rewritten ones. Assistant use stays
+  recorded here.
+
+## 2026-11-22 — Tùng — Claude (Claude Opus 5.5): queue and exactly-once
+
+- Task: criterion 2, queue half (PA3_PLAN.md §3.3, §4.2): schema migration,
+  Postgres claim and lease, worker loop, and the "stop the worker, submit,
+  start it again, judged exactly once" test. Sandbox code waits until the
+  team confirms who owns it (the plan says Tùng; Tín mentioned doing it with
+  the Oracle VM).
+- Order: the test commit `827bc6a` came first and was red (no `migrate.js`,
+  no claim code); `363e976` makes it green.
+- Dependencies (AGENTS.md asks first): the assistant asked; Tùng had not
+  decided, so it added the option it recommended, `pg` for Neon and
+  `@electric-sql/pglite` (dev only) so `npm test` runs real SQL with the
+  network cut, and the PR asks the team to confirm. `npm audit`: 0
+  vulnerabilities.
+- Changed: the first draft had a fixed 60 s lease. A judgement can outlast it
+  (compile 10 s, 7 tests × 3 s wall, two model calls of up to 20 s), and a
+  second worker would then judge the same submission. Added a heartbeat that
+  extends the lease, a 120 s default, and a test with a judge five times
+  slower than the lease.
+- Changed: a worker dying on its last attempt left the job `claimed` forever,
+  because only jobs under the attempt limit are claimable. The claim now
+  marks those jobs `failed` and the submission `error`; test added.
+- Changed: idle polling backs off (1 s doubling up to `WORKER_MAX_IDLE_MS`),
+  following the Neon CU-hour risk in PA3_PLAN.md §3.1.
+- Rejected: an in-memory fake repo for the exactly-once test; it would not
+  exercise the SQL that gives exactly-once (`SKIP LOCKED`, the unique keys,
+  the `claimed_by` guard).
+- Rejected: running the test against Neon; marking cuts the network.
+- Verified: all four checks pass locally on Node 24 (134 tests); the queue
+  tests pass with the network removed (`unshare -n`).
+- Not verified: pglite has one connection, so "two workers polling at once"
+  checks the SQL guards but not two sessions racing for a row lock; that and
+  the migration on Neon need a run with the real `DATABASE_URL`.
+- Note: at Tùng's request, the `Co-Authored-By: Claude` and `Claude-Session`
+  trailers were removed from this PR's commits before merge, keeping their
+  dates; the commit ids above are the rewritten ones. Assistant use stays
+  recorded here.
+
+## 2026-11-23 — Tuệ — Claude Code (Claude Opus 5.5): hard rules
+
+- Task: criterion 3 (PA3_PLAN.md §4.3): decide ban-list constraints with a
+  syntax-aware rule before the model, in `src/checker/hard-rules/`, shared by
+  the worker and the checker command.
+- Order: the test commit `e6ca1c2` came first and was red (no module);
+  `e42cc84` makes it green.
+- Dependencies (AGENTS.md asks first): the assistant asked; Tuệ approved
+  `web-tree-sitter@0.27.2` and `tree-sitter-cpp@0.23.4`, pinned exactly.
+  Only the grammar's `.wasm` file is used; the optional native `tree-sitter`
+  peer is not installed. `npm audit`: 0 vulnerabilities.
+- Approach: Tuệ chose to walk the syntax tree with a table of the names the
+  student declares, and to answer `unsure` whenever the rule cannot pin a
+  use down, so the risk falls on the unsure rate and not on wrongful
+  deductions.
+- Changed: a fresh assistant reviewed the design before any code and found
+  five gaps; each was settled in favour of `unsure`: a macro, typedef or
+  `using` that names a banned function but is never used is `unsure`, not a
+  violation; a bare name only drops `std::`, so banning `std::ranges::sort`
+  does not flag a plain `sort()`; a nested type that only ends like a banned
+  one (`std::vector<int>::reverse_iterator`) is `unsure`; a backticked item
+  the rule cannot read makes the constraint `unsure`, never a silent `pass`;
+  the result carries `decidedBy: 'hard_rule'` as evidence that the model was
+  not asked.
+- Changed: code inside `#if`/`#ifdef` blocks may never be compiled, so a
+  banned name there is `unsure` (added while writing the code).
+- Rejected: a full symbol table that models C++ name lookup; about three
+  times the work before the deadline, with more room for new bugs.
+- Rejected: a hand-written C++ tokenizer instead of a dependency; scope
+  (`namespace my { void sort... }`) would be guesswork, and the rubric asks
+  for a syntax-aware rule.
+- Rejected: the native `tree-sitter` binding; it needs node-gyp and has no
+  prebuild for the Alpine checker image.
+- Verified: all four checks pass on Node 24.22.3 (Tuệ upgraded from 22 for
+  this). On the 55 ban-list pairs of the dev set: 15 of 15 violations caught
+  with a labelled line and its exact text, 40 passes, 0 wrongful
+  deductions, 0 unsure (`test/hard-rules/dev-set.test.js`).
+- Not verified: the held-out set; wiring the rules into the worker's judge
+  (Tín); the small fixtures in `matchers.test.js` are snippets, not
+  programs compiled with g++.
+- Changed (cross-review, Tùng): a backslash-newline splice no longer hides a
+  banned name. `std::so\` + `rt(a, a + 3);` compiles with g++ to `std::sort`
+  but the rule returned `pass`, so the model was never asked. The source is
+  now joined the way the compiler joins it (LF and CRLF) before parsing, and a
+  line map turns every hit back into the student's own line, so the evidence
+  still shows the original text. Tests were written first and failed for the
+  two splice cases; four guard cases (splice inside a string, a `//` comment
+  ended by a splice, a plain `'\'`, line numbers after an earlier splice)
+  pass before and after.
+- Rejected: returning `unsure` whenever a splice appears. It is safe but
+  gives up a verdict the rule can pin down, and "outside comments and
+  strings" cannot be told without the parse that the splice defeats.
+- Not verified: a splice inside a raw string (`R"(...)"`), where the compiler
+  undoes the splice; the joined text only changes string contents there, which
+  never match. The CRLF case is tested; a lone `\r` line ending is not.
+- Verified: four checks green on Node 24.22.3 (203 tests, 12 Docker attack
+  tests skipped); the dev set still gives 15 of 15 violations and 0 wrongful
+  deductions.
+
+## 2026-11-23 — Tuệ — Claude Code (Claude Opus 5.5): checker command and own cases
+
+- Task: criterion 6 (PA3_PLAN.md §4.6): `bin/check.mjs` on a dataset folder,
+  `Dockerfile.checker`, a committed `MODEL_OFF=1` dev run, and our own cases
+  in `leetkob-eval-extra/`.
+- Order: the test commit `dda87e0` came first and was red (no decisions
+  file, no argument check); `d9482f0` makes it green. The own cases
+  (`dde8876`) and the dev run (`39886db`) follow.
+- Changed: a no-network check was added that the plan did not ask for. A
+  preload replaces `fetch`, `net`, `tls`, `http`, `https` and `dns` with
+  functions that throw, so a passing `MODEL_OFF=1` test proves that no
+  connection was opened. The first version passed a Windows path to
+  `--import` and every test failed for that reason alone; the path is now
+  a file URL.
+- Changed: `decisions.jsonl` sits next to `predictions.jsonl` and records
+  `decided_by` and `model_called` for each pair, so a run shows that no
+  ban-list pair reached the model. Extra fields stay out of the predictions,
+  so the input eval.mjs checks is unchanged.
+- Changed: the image installs with `--ignore-scripts`, copies only `bin/`
+  and `src/`, and runs as `node`. Built and run with `--network none`, it
+  gives the same 102 predictions as a local run.
+- Changed: the first eval report printed the absolute path of a team
+  member's local folder. `eval.mjs` was run again in a `node:24-alpine`
+  container, so the committed report shows `/repo/...`.
+- Rejected: a checker that quietly treats a configured model key as
+  working. The model client is not wired in yet, so the command prints a
+  note and semantic pairs stay `unsure`.
+- Rejected: running the own cases' C++ in CI outside the sandbox. They
+  were compiled and run once locally (g++ 13.1, `-std=c++17 -O2`); all six
+  are Accepted on the five tests.
+- Verified: four checks green on Node 24.22.3 (210 tests, 12 Docker attack
+  tests skipped). Dev run with the model off: 0 wrongful deductions; on the
+  55 ban-list pairs recall is 100% and unsure is 0%; overall FAIL, recall
+  40.5% and unsure 46.1%, because the 47 semantic pairs are `unsure`.
+  Own cases: all 6 ban-list pairs right, including the injection and the
+  macro.
+- Not verified: the run with the model (`runs/pa3-dev/`, `calls.jsonl`),
+  which waits for the model client (criterion 4, Tín).
+- Changed (after reading the PA#3 rubric): the README had no checker
+  section, and criterion 6 asks that "the README gives the command and a
+  Dockerfile". It now has the command, `MODEL_OFF=1`, and the build and
+  run lines.
+- Changed: the image ran as `node` (uid 1000). The markers mount their own
+  output folder, and a folder owned by another uid made the run fail with
+  `EACCES` before any prediction was written. The assistant reproduced
+  this with a folder owned by uid 4242 and removed the `USER` line, then
+  ran the same folder again and the run succeeded. The checker never runs
+  submissions and runs with `--network none`, so root inside it gives the
+  checker nothing it can reach.
+- Decided (Tuệ): the real-model run `runs/pa3-dev/` waits for Tín to wire
+  the model client into the checker's `semantic` hook (criterion 4), rather
+  than this PR calling the model.
+- Changed (cross-review, Tùng): the README run command now drops all Linux
+  capabilities and blocks new privileges. Tùng suggested
+  `--cap-drop ALL --security-opt no-new-privileges`. Tuệ ran it against a
+  volume owned by uid 4242: with `--cap-drop ALL` alone the run fails with
+  `EACCES` on `/out/predictions.jsonl.tmp`, because root without
+  `DAC_OVERRIDE` cannot write into another uid's folder. With
+  `--cap-add DAC_OVERRIDE` the run writes 102 predictions (pass 40, violation
+  15, unsure 47), the same as before. The README keeps that one capability
+  and says why.
+- Decided (Tuệ): keep `pg` in the image for now. It is a production
+  dependency of the app, not of the checker, and removing it changes
+  dependencies or the install step; Tùng marked it minor.
+- Changed (cross-review, Tùng): the no-network preload now also blocks
+  `net.Socket.prototype.connect`, `http2.connect`, `dgram`, the global
+  `WebSocket` and `EventSource`, every `dns` function (callback, `promises`
+  and `Resolver`) and `child_process`, which Tùng listed as uncovered. A new
+  test, `no-network.test.js`, tries each channel in a child process and
+  expects "network blocked by test", so a channel that stays open fails the
+  test; before this, the preload itself was untested.
+- Found by that test: the first version replaced `WebSocket` with an arrow
+  function, which cannot be called with `new`, so it failed with "not a
+  constructor" instead of the block message. It is now a class that throws in
+  its constructor.
+- Rejected: claiming the preload is a sandbox. It is a test guard (a native
+  addon or deleting the patches gets around it); the header says so, and the
+  `--network none` Docker run remains the real proof.
+- Verified: four checks green on Node 24.22.3 (234 tests, 12 Docker attack
+  tests skipped); the 9 model-off checker tests still pass with the wider
+  block.

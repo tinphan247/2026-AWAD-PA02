@@ -1,11 +1,17 @@
-# Sandbox image for LeeTKOB (PA#3, criterion 2).
-# Runs as a non-root user, with no network, no host mounts and no secrets.
-# Invoked by the worker with --network none --memory 256m --memory-swap 256m
-# --pids-limit 16 --user 1000:1000 --read-only --tmpfs /tmp.
+# Sandbox image for LeeTKOB (PA#3, criterion 2): compiler plus the runner.
+# The worker starts it with src/sandbox/run.js, which adds the limits:
+#   --network=none --user=1000:1000 --read-only --tmpfs=/tmp:... --cap-drop=ALL
+#   --security-opt=no-new-privileges --memory=256m --memory-swap=256m
+#   --pids-limit=16 --cpus=1, and no mounts, no -e, no Docker socket.
+# The image carries no secrets and no environment of the worker.
 
-FROM gcc:13
-RUN useradd -m -u 1000 sandbox
-USER sandbox
+ARG BASE_IMAGE=gcc:13
+FROM ${BASE_IMAGE}
+
+RUN getent passwd 1000 >/dev/null || useradd --uid 1000 --create-home --shell /usr/sbin/nologin sandbox
+COPY runner.sh /usr/local/bin/leetkob-runner
+RUN chmod 0555 /usr/local/bin/leetkob-runner
+
+USER 1000:1000
 WORKDIR /tmp
-# The worker mounts the source read-only and runs:
-#   g++ -std=c++17 -O2 -o /tmp/a.out /tmp/submission.cpp && /tmp/a.out
+ENTRYPOINT ["/usr/local/bin/leetkob-runner"]

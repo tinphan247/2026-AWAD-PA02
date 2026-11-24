@@ -6,10 +6,10 @@ Docker/Node, chạy worker, rồi nối Render + Neon + cron ping.
 **Nguyên tắc:** key Gemini chỉ nằm trên VM này. Render không có key. Sandbox
 không có key, không có mạng, không có Docker socket.
 
-**Trạng thái code:** `src/queue/worker.js` trên `main` còn là stub
-(`runWorker: not implemented`). VM và sandbox dựng được ngay, nhưng service
-worker chỉ chạy thật sau khi Tùng merge `tung/queue-exactly-once` và
-`tung/sandbox`. Đừng `enable` service trước đó, nó sẽ restart loop.
+**Trạng thái code:** queue, sandbox, hard rules và schema đã merge vào `main`
+(PR #15, #16, #17). `worker/index.js` đã nối đủ pipeline
+(`src/judge/pipeline.js`: sandbox → hard rules → model), nên service chạy thật
+ngay khi có `DATABASE_URL` và key Gemini.
 
 ---
 
@@ -264,19 +264,25 @@ sudo cp ~/leetkob/deploy/leetkob-worker.service /etc/systemd/system/
 sudo systemctl daemon-reload
 ```
 
-**Chưa enable ngay** nếu `worker.js` còn stub. Kiểm tra:
+**Chưa enable ngay** nếu chưa có `/etc/leetkob/worker.env` (worker thoát với
+`DATABASE_URL is not set`). Kiểm tra:
 
 ```bash
-cd ~/leetkob && git log --oneline -3 && grep -n "not implemented" src/queue/worker.js
+cd ~/leetkob && git log --oneline -3 && grep -c "not implemented" src/queue/worker.js
 ```
 
-Khi Tùng đã merge (không còn `not implemented`):
+`grep -c` phải trả `0`, và `worker/index.js` phải import `../src/judge/pipeline.js`.
+Khi đó:
 
 ```bash
 sudo systemctl enable --now leetkob-worker
 sudo systemctl status leetkob-worker --no-pager
 sudo journalctl -u leetkob-worker -f
 ```
+
+Không có `MODEL_API_KEY` thì worker vẫn chạy: hard rules quyết ban list, mọi
+constraint semantic thành `unsure` (giống `MODEL_OFF=1`), và nó in một cảnh báo
+lúc khởi động.
 
 Unit file đã có `Restart=always`, `RestartSec=15`, `SupplementaryGroups=docker`
 và `ExecStopPost` dọn các container `leetkob-sbx-*` còn sót.
@@ -448,7 +454,8 @@ Model cost của lab demo ghi vào `PA3.md` §8 theo giá list; hoá đơn thự
 | `Permission denied (publickey)` | sai user/key/quyền file | user `ubuntu`, đúng file key, `icacls` ở mục 2.1 |
 | SSH timeout | security list chặn IP mới | cập nhật CIDR `/32` |
 | `permission denied /var/run/docker.sock` | chưa login lại sau `usermod` | logout/login, hoặc `sudo` |
-| Service restart loop `runWorker: not implemented` | chưa merge nhánh Tùng | `systemctl disable --now`, chờ merge |
+| Service restart loop `DATABASE_URL is not set` | thiếu `/etc/leetkob/worker.env` | `systemctl disable --now`, tạo env, rồi `enable --now` |
+| Mọi constraint semantic thành `unsure` | thiếu `MODEL_API_KEY` hoặc đã chạm `labs.cost_cap_usd` | xem log khởi động, `select sum(cost_usd) from model_calls` |
 | `sandbox did not start` | thiếu image hoặc Docker chết | `docker images`, `systemctl status docker` |
 | Worker không claim job | sai `DATABASE_URL`, chưa migration, hoặc chưa có job | log worker, `select * from submissions` |
 | Neon lỗi kết nối lặp lại | DB ngủ / hết CU-hour | tăng `POLL_INTERVAL_MS`, xem Usage |

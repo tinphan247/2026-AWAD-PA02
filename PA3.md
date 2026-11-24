@@ -4,8 +4,8 @@ Nhóm: Phan Trung Tín (23120372), Nguyễn Sơn Tùng (23120399), Minh Tuệ (2
 
 Repo: <https://github.com/tinphan247/2026-AWAD-PA02>
 
-> Đây là bản nháp của `PA3.md`. Các mục ghi **TODO** cần điền sau khi deploy và
-> sau khi Tùng/Tuệ merge phần của họ. Không đánh dấu xong khi chưa có bằng chứng.
+> Đây là bản nháp của `PA3.md`. Các mục ghi **TODO** cần điền sau khi deploy.
+> Không đánh dấu xong khi chưa có bằng chứng.
 
 ## 1. Kiến trúc và deployment
 
@@ -20,6 +20,9 @@ Repo: <https://github.com/tinphan247/2026-AWAD-PA02>
 - Cron-job.org gọi `/healthz` mỗi 10 phút để Render free không ngủ.
 - `GEMINI_API_KEY` chỉ đặt trên worker Oracle; **không** đặt trên Render và
   **không** truyền vào sandbox.
+- Worker: `worker/index.js` → `src/judge/pipeline.js` chạy sandbox → hard rules
+  (ban list, không gọi model) → model (mỗi constraint một call), rồi ghi
+  `verdicts` và `model_calls`. Không có key thì semantic thành `unsure`.
 - Hướng dẫn từng bước: [`docs/deploy.md`](docs/deploy.md).
 - Runbook Oracle (đăng ký, thẻ, SSH, firewall, systemd):
   [`docs/oracle-vm.md`](docs/oracle-vm.md); script cài: `deploy/oracle-setup.sh`.

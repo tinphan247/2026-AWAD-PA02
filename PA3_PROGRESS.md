@@ -1,19 +1,16 @@
 # PA#3 — bảng tiến độ
 
-Cập nhật: **22/11/2026**. Mỗi người sửa đúng dòng của mình; không đánh dấu xong
+Cập nhật: **24/11/2026**. Mỗi người sửa đúng dòng của mình; không đánh dấu xong
 khi chưa có test/commit.
 
 ## Nhánh và merge
 
 | Nhánh | Nội dung | Trạng thái |
 |---|---|---|
-| `feat/pa3-scaffold` | scaffold, model, UI flow, `PA3.md` | đã push; **cần PR → `main`** |
-| `tung/sandbox` | 9 attack, `src/sandbox/run.js`, CI job `sandbox` | đã push; **chờ merge** |
-| `tung/queue-exactly-once` | schema 9 bảng, claim/lease, test exactly-once | đã push; **chờ merge** |
-| `feat/hard-rules-checker` (Tuệ) | tree-sitter, trap fixtures, checker | **chưa có** |
-
-Thứ tự merge đề nghị: `tung/queue-exactly-once` → `tung/sandbox` →
-`feat/pa3-scaffold` → nhánh Tuệ. Mỗi PR cần 1 approval + `ci` xanh.
+| `feat/pa3-scaffold` | scaffold, model, UI flow, worker pipeline, `PA3.md` | đã merge `main` vào nhánh (`554d7bf`); **cần PR → `main`** |
+| `tung/sandbox` | 9 attack, `src/sandbox/run.js`, CI job `sandbox` | **đã merge** (PR #15) |
+| `tung/queue-exactly-once` | schema 9 bảng, claim/lease, test exactly-once | **đã merge** |
+| `tue/hard-rules`, `tue/checker` | tree-sitter, trap fixtures, checker | **đã merge** (PR #16, #17) |
 
 ## Tín (C1, C4, hạ tầng, release)
 
@@ -28,22 +25,23 @@ Thứ tự merge đề nghị: `tung/queue-exactly-once` → `tung/sandbox` →
 | Review queue FAQ-10 + tab tất cả verdict | xong | `src/domain/review.js` |
 | Cách ly lớp 403 | xong | `test/web/flow.test.js` |
 | `PA3.md`, README, kịch bản video | xong | `PA3.md`, `README.md`, `docs/video-script.md` |
-| Runbook Oracle + script cài + systemd unit | xong | `docs/oracle-vm.md`, `deploy/oracle-setup.sh`, `deploy/leetkob-worker.service` |
-| **Oracle VM** | **chờ bạn** | đăng ký + thẻ xác minh; runbook ở trên |
-| Env Render/Neon + cron ping | chờ Oracle | `docs/deploy.md`, `scripts/keepalive.mjs` |
+| Runbook Oracle + script cài + systemd unit | xong | `docs/oracle-vm.md`, `deploy/oracle-setup.sh` |
+| Merge `main` vào nhánh, resolve 2 conflict | xong | `554d7bf`, `npm test` 270 test |
+| **Tích hợp worker** (sandbox → hard rules → model) | xong | `src/judge/pipeline.js`, `worker/index.js`, `test/judge/pipeline.test.js` |
+| **Oracle VM** | **chờ bấm** | AD-1 hết capacity A1/Micro; runbook sẵn |
+| Env Render/Neon + cron ping | chờ VM | `docs/deploy.md`, `scripts/keepalive.mjs` |
 | Gọi Gemini thật | **blocked** | chờ key của Tùng |
-| Tích hợp worker | chờ Tùng merge | `src/model/judge.js` là điểm gọi |
+| Cầu web ↔ Postgres (submission → job) | **chưa ai làm** | web đang in-memory, `enqueueJob` không có caller |
 | Video, tag `pa3`, zip | chưa | hạn 25/11 |
 
 ## Tùng (C2, C5, schema, secrets)
 
 | Việc | Trạng thái | Bằng chứng |
 |---|---|---|
-| 9 attack + runner hardened + CI `sandbox` | xong trên nhánh | `tung/sandbox` |
-| Schema 9 bảng + `model_calls` | xong trên nhánh | `tung/queue-exactly-once` |
-| Claim/lease + exactly-once | xong trên nhánh | `tung/queue-exactly-once` |
-| Merge 2 nhánh | **chưa** | cần PR + approval |
-| Gemini key (spending cap 0) | **chưa** | giao Tín đặt env Oracle |
+| 9 attack + runner hardened + CI `sandbox` | xong, đã merge | `sandbox/`, `test/sandbox/`, PR #15 |
+| Schema 9 bảng + `model_calls` | xong, đã merge | `db/migrations/001_init.sql` |
+| Claim/lease + exactly-once | xong, đã merge | `src/queue/claim.js`, `test/queue/exactly-once.test.js` |
+| Gemini key (spending cap 0) | **chưa** | giao Tín đặt env VM |
 | Limits test (schema/timeout → unsure) | chưa | C5 |
 | Publish gating FAQ-12 | chưa | C5 |
 | gitleaks lần cuối | chưa | trước tag |
@@ -52,27 +50,25 @@ Thứ tự merge đề nghị: `tung/queue-exactly-once` → `tung/sandbox` →
 
 | Việc | Trạng thái |
 |---|---|
-| `web-tree-sitter` (WASM) + grammar C++ | **chưa** |
-| `decideBanList` 6 dạng + scope trap | **chưa** |
-| Fixture `s02`, `s03` + trap không bền | **chưa** |
-| Checker CLI dùng chung hard-rules | **chưa** |
-| `Dockerfile.checker`, `runs/pa3-dev/` | **chưa** |
-| ≥5 case riêng (≥1 trap, ≥1 injection) | **chưa** |
+| `web-tree-sitter` (WASM) + grammar C++ | xong, đã merge (PR #16) |
+| `decideBanList` 6 dạng + scope trap | xong, đã merge |
+| Fixture `s02`, `s03` + trap không bẩn | xong, đã merge |
+| Checker CLI dùng chung hard-rules | xong, đã merge (PR #17) |
+| `Dockerfile.checker`, `runs/pa3-dev-model-off/` | xong, đã merge |
+| `runs/pa3-dev/` với model bật | **chờ key** |
 
 ## Blockers
 
 | Blocker | Ai gỡ | Ảnh hưởng |
 |---|---|---|
-| Oracle Cloud VM | Tín | deploy worker + sandbox (C2 trên deployment); runbook sẵn, chờ đăng ký/thẻ |
-| Gemini key | Tùng → Tín | chưa có call thật (C4) |
-| Merge schema Postgres | Tùng | UI còn in-memory, restart mất lab |
-| Merge sandbox | Tùng | chưa có job CI trên tag |
-| Hard rules + checker | Tuệ | C3/C6 = 0 |
+| Oracle Cloud VM | Tín | deploy worker + sandbox trên deployment |
+| Gemini key | Tùng → Tín | chưa có call thật (C4), chưa có `runs/pa3-dev/` |
+| Cầu web ↔ Postgres | Tùng/Tín | web không tạo job nên worker không chấm bài trên deployment |
 | PR `feat/pa3-scaffold` | Tín mở, Tùng/Tuệ approve | `main` chưa có PA#3 |
 
 ## Mốc thời gian
 
-- **22/11 tối:** Oracle VM + key; Tùng merge schema/sandbox.
-- **23/11:** tích hợp worker gọi `judgeConstraint`; Tuệ có hard rules.
-- **24/11:** deploy đủ 3 thành phần; chạy 3 bài demo; `runs/pa3-dev/`.
-- **25/11:** freeze 12:00 → tag `pa3` → zip → nộp trước **18:00**.
+- **24/11:** merge `main` vào nhánh (xong) + tích hợp worker (xong); Neon + Render
+  + VM.
+- **25/11:** 3 bài demo, `runs/pa3-dev/`; freeze 12:00 → tag `pa3` → zip → nộp
+  trước **18:00**.

@@ -698,3 +698,36 @@
 - Verified: four checks green on Node 24.22.3 (234 tests, 12 Docker attack
   tests skipped); the 9 model-off checker tests still pass with the wider
   block.
+
+## 2026-11-24 — Tín — Claude (DeepSeek V4.1 Flash Free): merge main, wire the worker judge
+
+- Task: bring `main` (sandbox, schema, queue, hard rules, checker) into
+  `feat/pa3-scaffold`, then replace the `worker/index.js` judge stub with the
+  real sandbox → hard rules → model pipeline (criteria 2, 3, 4 integration).
+- Input: `main` at `f601c06`, `PA3_PROGRESS.md` blockers, `src/queue/worker.js`
+  (`loadSubmission` returns no statement or tests), `src/model/judge.js`,
+  `src/sandbox/run.js`, `src/checker/hard-rules/index.js`.
+- Result: merge `554d7bf`, conflicts only in `.dockerignore` (kept the narrower
+  PA#3 context) and `AI-LOG.md` (kept both sides in date order). New
+  `src/judge/pipeline.js` builds the judge: it loads the lab row, runs the
+  sandbox, decides every ban list with `parseBanList` + `rules.check`, asks the
+  model once per semantic pair, and accumulates `model_calls` cost so later
+  pairs see the money earlier ones spent. New `src/judge/recorder.js` writes
+  each call to `model_calls` (authoritative) and optionally to JSONL.
+  `worker/index.js` is now only env wiring.
+- Changed: an `unsure` reason outside the `verdicts.unsure_reason` CHECK is
+  stored as `model_unsure`; otherwise one unexpected reason would abort the
+  transaction that stores the whole submission and re-bill the model on the
+  retry. With no `MODEL_API_KEY` the worker runs the hard rules and marks every
+  semantic pair `unsure` without a call, the same contract as `MODEL_OFF=1`.
+  `deploy/worker.env.example` now lists only what the worker reads, and
+  `docs/oracle-vm.md` no longer says the queue is a stub.
+- Rejected: extending `loadSubmission()` in `src/queue/worker.js` with the
+  statement and tests — that file is Tùng's, and the pipeline can query the lab
+  row itself. Rejected: adding `model_error` to the schema now; that is a schema
+  change and needs Tùng, so the worker maps it.
+- Not verified: no real model call, no Docker run and no VM, so the pipeline has
+  only run against injected sandbox and model doubles.
+- Evidence: `npm test` 277 tests (265 pass, 12 Docker-only skipped), `npm run
+  lint`, `npm run format:check`, `npm run typecheck`; merge commit `554d7bf`.
+

@@ -192,7 +192,14 @@ export async function judgeConstraint({
     prompt: user,
     at: now(),
   });
-  if (callLog !== null) await callLog.record(call);
+  if (callLog !== null) {
+    try {
+      await callLog.record(call);
+    } catch {
+      // The model already answered and was billed; a recorder failure must not
+      // make the job retry and bill the model again. The call is still returned.
+    }
+  }
 
   let parsed;
   try {

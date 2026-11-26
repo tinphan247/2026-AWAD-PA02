@@ -42,6 +42,6 @@ runWorker({
 })
   .then(() => db.close())
   .catch((error) => {
-    console.error('worker failed:', error);
+    console.error('worker failed:', error?.message ?? error);
     process.exit(1);
   });

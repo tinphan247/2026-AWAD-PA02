@@ -37,12 +37,14 @@ export function parseCookies(header) {
  * @returns {string}
  */
 export function serializeCookie(name, value, { maxAgeSeconds = 60 * 60 * 12 } = {}) {
-  return `${name}=${encodeURIComponent(value)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAgeSeconds}`;
+  const secure = process.env.NODE_ENV === 'production' ? '; Secure' : '';
+  return `${name}=${encodeURIComponent(value)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAgeSeconds}${secure}`;
 }
 
 /** @param {string} name @returns {string} */
 export function clearCookie(name) {
-  return `${name}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`;
+  const secure = process.env.NODE_ENV === 'production' ? '; Secure' : '';
+  return `${name}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${secure}`;
 }
 
 /**

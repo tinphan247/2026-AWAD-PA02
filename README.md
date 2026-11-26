@@ -1,8 +1,8 @@
-﻿# LeeTKOB â€” PA#2 harness and PA#3 prototype
+# LeeTKOB â€” PA#2 harness and quality gate
 
 PA#2 checkpoint for **CSC13114 â€” Advanced Web Application Development**.
 This repository is the ground the LeeTKOB product stands on before the LLM
-feature arrives in PA#3. PA#3 adds that feature on the same repository.
+feature arrives in PA#3.
 
 ## Status
 
@@ -10,46 +10,9 @@ PA#2 is complete. The toolchain, health route and required CI are in place,
 `POST /v1/labs/{labId}/submissions` is implemented, and its contract tests
 cover success, errors, authentication, ownership and idempotency.
 
-PA#3 is in progress. The model pipeline, the TA/student web flow and the
-review queue are implemented and tested; the Postgres repository, the sandbox,
-the worker and the checker are on their own branches. [`PA3.md`](PA3.md)
-tracks what is still TODO.
-
 - Contract: [`docs/contract/post-labs-labId-submissions.md`](docs/contract/post-labs-labId-submissions.md)
 - Submission links and evidence: [`PA2.md`](PA2.md)
-- PA#3 status, accounts and FAQ compliance: [`PA3.md`](PA3.md)
 - Self-assessment: [`SELF_ASSESSMENT_REPORT.md`](SELF_ASSESSMENT_REPORT.md)
-
-## PA#3 prototype
-
-- **TA flow:** create a lab through the UI with a statement, constraints
-  (`text | deduction`) and a multi-file `NN.in`/`NN.out` upload.
-- **Student flow:** see the statement, constraints and deductions before
-  submitting; after submitting see `queued/judging/judged` and per-test
-  results, but not test input/output (FAQ-02) and not constraint verdicts
-  before the TA publishes (FAQ-08).
-- **TA review:** the FAQ-10 queue (every violation, every unsure,
-  `ceil(10%)` of passes) plus an all-verdicts tab, with evidence lines and the
-  deduction. A TA of another class gets 403.
-- **Model pipeline** (`src/model/judge.js`): anonymise the code (comments,
-  name, MSSV and email removed, line numbers unchanged), send one constraint
-  per call, validate the schema, verify every evidence line, then map it back
-  to the original line. Any failure becomes `unsure` with a reason; the model
-  never sets a deduction.
-- **Call log** (`src/model/calllog.js`): request id, tokens, latency,
-  list-price cost and the anonymised prompt.
-
-Architecture: Render (web) + a cloud VM (worker and Docker
-sandbox) + Neon (Postgres) + Gemini free tier. See
-[`docs/deploy.md`](docs/deploy.md).
-
-Demo accounts (token login at `/login`): `admin-token`, `ta1-token`,
-`ta2-token`, `sv1-token`, `sv2-token`, `sv3-token`. Only the accounts are
-seeded; every lab is created through the UI.
-
-Current limits: the web store is in memory until the Postgres repository
-lands, so a restart drops labs. `npm test` stays offline: it needs no Docker,
-database or network.
 
 ## Requirements
 
@@ -67,61 +30,7 @@ npm test
 ```
 
 These are the exact commands CI runs. A fresh clone that follows this README
-must be green. `npm test` needs no network, Docker or database.
-
-Sandbox attack tests (PA#3 criterion 2) need Docker and run in the CI job
-`sandbox`:
-
-```bash
-docker build -t leetkob-sandbox:test sandbox
-npm run test:sandbox
-```
-
-## Checker command (PA#3 criterion 6)
-
-One command line takes a dataset folder (the layout of `leetkob-eval/`) and
-writes the prediction file, plus `decisions.jsonl` next to it (who decided
-each pair, and whether the model was called). It works from `statement.md`
-and `constraints.json` alone; `labels.jsonl` is never read.
-
-```bash
-node bin/check.mjs --dataset leetkob-eval --out runs/out/predictions.jsonl
-node leetkob-eval/eval.mjs --data leetkob-eval --predictions runs/out/predictions.jsonl
-```
-
-**Model-off switch: `MODEL_OFF=1`.** Ban-list constraints are decided by the
-hard rules (`src/checker/hard-rules/`, tree-sitter), every semantic
-constraint is `unsure`, and no network connection is opened. Without a
-`MODEL_API_KEY` the checker behaves the same way.
-
-Docker image, run with the model off and the network cut:
-
-```bash
-docker build -f Dockerfile.checker -t leetkob-checker .
-docker run --rm --network none --memory 1g --pids-limit 256 \
-  --cap-drop ALL --cap-add DAC_OVERRIDE --security-opt no-new-privileges \
-  -v "$PWD/leetkob-eval:/data:ro" -v "$PWD/runs/out:/out" \
-  -e MODEL_OFF=1 leetkob-checker --dataset /data --out /out/predictions.jsonl
-```
-
-The image has no `USER` line, so the process is root inside the container (the
-output folder you mount may belong to any uid). `--cap-drop ALL` removes every
-Linux capability from that root and `--security-opt no-new-privileges` stops
-the process from gaining any later. The one capability kept is
-`DAC_OVERRIDE`: without it root cannot write into an output folder owned by
-another uid (`EACCES` on `/out/predictions.jsonl.tmp`, checked with a volume
-owned by uid 4242). If your output folder is writable by the container's uid,
-you can drop it too.
-
-Committed runs:
-
-- [`runs/pa3-dev-model-off/`](runs/pa3-dev-model-off/README.md): the image
-  above on the dev set. 0 wrongful deductions; every ban-list pair decided.
-- `runs/pa3-dev/`: the real-model run, added once the model client is wired
-  into the checker.
-
-Our own cases, same layout, scored with the same `eval.mjs`:
-[`leetkob-eval-extra/`](leetkob-eval-extra/README.md).
+must be green.
 
 Local development:
 
@@ -130,7 +39,7 @@ npm run dev
 ```
 
 The server listens on `127.0.0.1:3000` by default. Override with `PORT` /
-`HOST`.
+Architecture: Render (web) + a cloud VM (worker and Docker
 
 ## Project layout
 
@@ -163,13 +72,9 @@ No secret belongs in this repository. The model API key is read only from the
 environment, must never be visible inside the sandbox, and must have a spending
 cap on the provider dashboard. PA#2 makes no model calls.
 
-Only `HOST` and `PORT` are currently read by the web process; `.env.example`
-lists the rest without values. The application does not load a `.env` file
-itself.
-
-In PA#3 the model API key is read only on the worker VM. It is never set on
-Render and never passed into the sandbox. The UI and the worker share the
-database, not the key.
+Only `HOST` and `PORT` are currently read by the application; `.env.example`
+lists them without values. The application does not load a `.env` file itself.
+The `MODEL_*` and `DATABASE_PATH` entries are reserved for PA#3.
 
 PA#2 makes no model calls, so its model API cost is USD 0.
 
@@ -177,9 +82,11 @@ The LeeTKOB model API **spending cap is USD 0**. Paid API billing is not
 enabled for this project and may only be enabled after the whole team agrees,
 so no model call can create a charge while the cap stands. The application may
 use free-tier quota only, and the account owner must check the provider's
-free-tier limits before any call. PA#3 uses `gemini-2.5-flash` on the free tier. `src/model/cost.js` records the
-list price of every call, so the cost per lab is measurable while the bill
-stays USD 0. PA#3 per-lab cost is measured during evaluation.
+free-tier limits before any call. The provider and exact model ID are chosen
+in PA#3 after that check; they are deliberately not fixed here. The account
+owner is TÃ¹ng (security lead) and TÃ­n reviews the evidence. The account owner
+records the provider-side limit and its evidence before the first PA#3 call.
+PA#3 per-lab cost will be measured during evaluation.
 
 The history scan procedure and its scope are recorded in
 `docs/evidence/secret-scan.txt`. Repeat the scan on the final submission commit.

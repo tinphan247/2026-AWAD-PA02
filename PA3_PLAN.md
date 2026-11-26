@@ -1,4 +1,4 @@
-﻿# Káº¾ HOáº CH TRIá»‚N KHAI PA#3 â€” LeeTKOB
+# Káº¾ HOáº CH TRIá»‚N KHAI PA#3 â€” LeeTKOB
 
 **MÃ´n:** CSC13114 â€” Advanced Web Application Development
 **Checkpoint:** PA#3 â€” Prototype with the LLM feature running
@@ -123,7 +123,7 @@ Báº¡n chá»n **PaaS cÃ³ Docker (Render/Railway/Fly.io)**. Cáº§n phÃ�
 
 | # | PhÆ°Æ¡ng Ã¡n | Vai trÃ² | Tráº¡ng thÃ¡i |
 |---|---|---|---|
-| **C** | **Render free + Azure for Students VM** | Render: web/API/UI. Azure: worker + sandbox + Docker (Oracle hết capacity) | ? **Da ch?n** |
+| **C** | **Render free + Azure for Students VM** | Render: web/API/UI. Azure: worker + sandbox + Docker (Oracle het capacity) | ? **Da chon** |
 | A | Oracle Cloud Always Free (1 VM) | Gá»™p web + worker + Postgres + Caddy | Fallback náº¿u Render háº¿t 750 h hoáº·c ngá»§ khi cháº¥m |
 | B | Google Cloud e2-micro (1 GB) | Worker + sandbox | Fallback náº¿u Oracle háº¿t capacity |
 | D | AWS/Azure free 12 thÃ¡ng | Worker | Fallback ngáº¯n háº¡n |
@@ -163,9 +163,6 @@ Render Web Service (free)  â”€â”€â”€â”€â”€â”€â–
 
 - **Render free** ngá»§ sau 15 phÃºt khÃ´ng cÃ³ request. DÃ¹ng cron-job.org (hoáº·c GitHub Actions schedule) ping `/healthz` má»—i 10 phÃºt. 24/7 â‰ˆ 730 h/thÃ¡ng, vá»«a dÆ°á»›i háº¡n 750 h.
 - **Neon free** scale-to-zero, request Ä‘áº§u sau ngá»§ cháº­m ~0.5â€“1 s; cháº¥p nháº­n Ä‘Æ°á»£c.
-- **Neon free chá»‰ cÃ³ 100 CU-hours/project/thÃ¡ng**; cháº¡m háº¡n má»©c thÃ¬ compute bá»‹ **suspend tá»›i thÃ¡ng sau** (<https://neon.com/faqs/free-plan-limits-and-quotas>). Compute chá»‰ ngá»§ khi **5 phÃºt** khÃ´ng cÃ³ truy váº¥n. Náº¿u worker poll DB má»—i 1â€“2 s thÃ¬ DB thá»©c 24/7: 0.25 CU Ã— 730 h â‰ˆ 182 CU-h/thÃ¡ng > 100 â†’ háº¿t quota sau ~400 h (~17 ngÃ y), **trÆ°á»›c khi cÃ³ Ä‘iá»ƒm PA#4**. CÃ¡ch xá»­ lÃ½ (chá»‘t khi cÃ³ Oracle):
-  - Láº¥y Ä‘Æ°á»£c Oracle **A1 (24 GB)** â†’ cháº¡y **táº¥t cáº£ trÃªn Oracle** (web + worker + Postgres + Caddy, phÆ°Æ¡ng Ã¡n A), Neon chá»‰ Ä‘á»ƒ dev.
-  - Chá»‰ cÃ³ **AMD 1 GB** â†’ giá»¯ Render + Neon, worker poll cÃ³ **idle backoff** (giÃ£n dáº§n khi khÃ´ng cÃ³ job), theo dÃµi CU-hours trÃªn dashboard Neon má»—i 2â€“3 ngÃ y.
 - **Oracle Always Free** cáº§n tháº» xÃ¡c minh, hay háº¿t capacity ARM â€” thá»­ region khÃ¡c hoáº·c mÃ¡y AMD 1 GB. CÃ³ thá»ƒ bá»‹ thu há»“i náº¿u idle 7 ngÃ y â†’ cron ping + tÃ¡c vá»¥ CPU nháº¹ Ä‘á»‹nh ká»³.
 - Náº¿u **Oracle ARM**: build image `linux/arm64` (gcc, Node 24, tree-sitter Ä‘á»u há»— trá»£).
 - Náº¿u **Render free khÃ´ng Ä‘á»§** (quÃ¡ 750 h, hoáº·c ngá»§ giá»¯a lÃºc cháº¥m): chuyá»ƒn web sang chÃ­nh Oracle VM (phÆ°Æ¡ng Ã¡n A) â€” code khÃ´ng Ä‘á»•i, chá»‰ Ä‘á»•i `DATABASE_URL` vÃ  cháº¡y thÃªm container web + Caddy.
@@ -188,10 +185,10 @@ Render Web Service (free)  â”€â”€â”€â”€â”€â”€â–
 | Web | Node `http` hiá»‡n cÃ³ + server-rendered HTML tá»‘i giáº£n | Ãt moving part, ká»‹p deadline; khÃ´ng thÃªm React |
 | DB | **Neon Postgres free** (TLS) | Queue bá»n vá»¯ng, exactly-once, cáº§u ná»‘i Render â†” Oracle |
 | Sandbox | Docker + image `leetkob-sandbox` (gcc/g++), `--network none` | Äá»§ 9 minimums |
-| Hard rules | `web-tree-sitter` (WASM) + grammar `tree-sitter-cpp` | AST tháº­t, phÃ¢n biá»‡t comment/string/include; offline. DÃ¹ng báº£n WASM thay cho binding native `tree-sitter`: khÃ´ng cáº§n node-gyp, cháº¡y Ä‘Æ°á»£c trÃªn Node 24, trong image checker `--network none` vÃ  trÃªn Oracle ARM |
+| Hard rules | `tree-sitter` + `tree-sitter-cpp` | AST tháº­t, phÃ¢n biá»‡t comment/string/include; offline |
 | Model | **Google Gemini free tier** (`gemini-2.5-flash` hoáº·c `gemini-2.0-flash`) | Free tier, structured output (JSON schema), cÃ³ `responseId` |
 | Checker | CLI Node + Dockerfile riÃªng | Cháº¡y Ä‘Æ°á»£c `--network none`, `MODEL_OFF=1` |
-| Deploy | **Render free (web) + Azure for Students VM (worker) + Neon (DB)** | Public HTTPS, Docker th?t, mi?n ph� |
+| Deploy | **Render free (web) + Azure for Students VM (worker) + Neon (DB)** | Public HTTPS, Docker that, mien phi |
 
 ### 3.3 MÃ´ hÃ¬nh dá»¯ liá»‡u tá»‘i thiá»ƒu
 
@@ -247,15 +244,10 @@ model_calls(id, submission_id, constraint_id, provider, model, provider_request_
 **Äiá»u kiá»‡n Äƒn Ä‘iá»ƒm cao:** má»i bÆ°á»›c qua UI/API cá»§a sáº£n pháº©m, **khÃ´ng** seed lab báº±ng script.
 
 - Trang TA: form táº¡o lab (title, statement, tests, constraint text + deduction). Constraint cÃ³ text báº¯t Ä‘áº§u `Do not use`/`Do not call` â†’ tá»± nháº­n lÃ  ban list.
-  - **Tests pháº£i upload Ä‘Æ°á»£c nhiá»u file má»™t láº§n** (`<input type="file" multiple>`, ghÃ©p cáº·p `NN.in`/`NN.out` theo tÃªn). `sort-merge` cÃ³ 7 cáº·p test; ngÆ°á»i cháº¥m táº¡o lab tá»« chÃ­nh cÃ¡c file nÃ y qua UI, gÃµ tay tá»«ng test lÃ  khÃ´ng kháº£ thi.
-  - Constraint: nháº­p Ä‘Æ°á»£c â‰¥2 dÃ²ng (text + deduction); cÃ³ thá»ƒ thÃªm nÃºt "nháº­p tá»« `constraints.json`" cho nhanh, nhÆ°ng váº«n lÃ  thao tÃ¡c trÃªn UI.
 - Trang Student **trÆ°á»›c khi ná»™p**: hiá»‡n Ä‘á»§ statement, danh sÃ¡ch constraint + má»©c trá»«, vÃ  thÃ´ng bÃ¡o code sáº½ Ä‘Æ°á»£c soÃ¡t báº±ng luáº­t cá»©ng + model, model chá»‰ nháº­n Ä‘á» + constraint + code Ä‘Ã£ bá» comment/tÃªn/MSSV (FAQ-06).
 - Trang Student **sau khi ná»™p**: hiá»‡n `queued/judging/judged`, verdict tá»•ng (AC/WA/TLE/â€¦) vÃ  verdict tá»«ng test; **khÃ´ng** hiá»‡n input/output cá»§a test (FAQ-02); **khÃ´ng** hiá»‡n constraint verdict/evidence trÆ°á»›c publish (FAQ-08).
 - **3 bÃ i demo dÃ¹ng 3 sinh viÃªn khÃ¡c nhau**, vÃ¬ chá»‰ bÃ i ná»™p cuá»‘i cá»§a má»—i sinh viÃªn Ä‘Æ°á»£c tÃ­nh vÃ  vÃ o queue (FAQ-02).
-- Trang TA review: báº£ng `submission Ã— constraint`, verdict mÃ u, evidence lines (highlight Ä‘Ãºng dÃ²ng), deduction; chá»‰ hiá»‡n **bÃ i counted** (FAQ-02). CÃ³ **2 tab**:
-  - **Review queue** (theo FAQ-10): má»i `violation`, má»i `unsure`, vÃ  10% `pass` chá»n ngáº«u nhiÃªn, lÃ m trÃ²n lÃªn.
-  - **Táº¥t cáº£ verdict**: Ä‘á»§ má»i cáº·p submission Ã— constraint; `pass` khÃ´ng náº±m trong máº«u 10% ghi nhÃ£n "khÃ´ng vÃ o máº«u review".
-  - LÃ½ do: rubric C1 yÃªu cáº§u queue hiá»‡n "for each submission and each constraint, the verdict, the evidence lines and the deduction". Náº¿u chá»‰ cÃ³ tab FAQ-10, bÃ i compliant cá»§a ngÆ°á»i cháº¥m ráº¥t dá»… khÃ´ng xuáº¥t hiá»‡n (3 bÃ i Ã— 2 constraint chá»‰ cÃ³ khoáº£ng 3 `pass` â†’ máº«u 10% chá»‰ cÃ²n 1).
+- Trang TA review: báº£ng `submission Ã— constraint`, verdict mÃ u, evidence lines (highlight Ä‘Ãºng dÃ²ng), deduction; chá»‰ hiá»‡n **bÃ i counted** (FAQ-02), gá»“m má»i `violation`, má»i `unsure`, vÃ  10% `pass` (FAQ-10).
 - CÃ¡ch ly: query luÃ´n kÃ¨m `class_id` cá»§a TA Ä‘ang Ä‘Äƒng nháº­p; TA class khÃ¡c nháº­n **403** (theo contract PA#2, FAQ-01). CÃ³ test.
 - **Seed account** (admin/TA/student) Ä‘Æ°á»£c phÃ©p, nhÆ°ng **lab pháº£i táº¡o qua UI**. Ghi rÃµ trong `PA3.md` Ä‘á»ƒ ngÆ°á»i cháº¥m khÃ´ng trá»« Ä‘iá»ƒm.
 
@@ -277,19 +269,13 @@ model_calls(id, submission_id, constraint_id, provider, model, provider_request_
 | 6 | Output size | Ä‘á»c stdout cap 1 MB/test, kill khi vÆ°á»£t | in hÃ ng trÄƒm MB | bá»‹ cáº¯t/kill, `RE` |
 | 7 | Non-root | `--user 1000:1000`, image cÃ³ user riÃªng | `id -u` | khÃ¡c 0 |
 | 8 | No host mount / no docker socket | khÃ´ng `-v`; `--read-only` + tmpfs; khÃ´ng mount socket | Ä‘á»c `/var/run/docker.sock`, `mount`, `/etc/hostname` | khÃ´ng tháº¥y |
-| 9 | No secrets | khÃ´ng `-e MODEL_API_KEY`; worker giá»¯ key ngoÃ i sandbox | in `env`, grep filesystem tÃ¬m key/pattern; **thÃªm má»™t attack lÃºc compile**: `#include "/proc/1/environ"` vÃ  `#include` Ä‘Æ°á»ng dáº«n file env cá»§a worker (vd. `/etc/leetkob/worker.env`) | khÃ´ng cÃ³ key; compile lá»—i vÃ¬ file khÃ´ng tá»“n táº¡i/khÃ´ng Ä‘á»c Ä‘Æ°á»£c |
+| 9 | No secrets | khÃ´ng `-e MODEL_API_KEY`; worker giá»¯ key ngoÃ i sandbox | in `env`, grep filesystem tÃ¬m key/pattern | khÃ´ng cÃ³ key |
 
 **Báº¯t buá»™c thÃªm:**
 
 - **Compile trong sandbox** (cÃ¹ng image, cÃ¹ng limits, `--network none`).
 - **Worker riÃªng:** test "stop worker â†’ submit â†’ start worker â†’ judged exactly once" (hoáº·c quay video).
 - **CI cháº¡y attack tests trÃªn tag `pa3`.** GitHub Actions runner cÃ³ Docker â†’ thÃªm job `sandbox` trong `ci.yml`, trigger cáº£ `tags: ['pa3']`.
-- Minimum 9 pháº£i cháº·n cáº£ **lÃºc compile**: rubric ghi key khÃ´ng Ä‘Æ°á»£c náº±m trong "anything the compiler can `#include`". VÃ¬ compile cháº¡y trong sandbox khÃ´ng mount gÃ¬, attack `#include` pháº£i compile lá»—i.
-- **TÃ¡ch test theo mÃ´i trÆ°á»ng.** Khi cháº¥m, ngÆ°á»i cháº¥m cháº¡y cÃ¡c lá»‡nh check trong container: cÃ i dependency xong thÃ¬ **cáº¯t máº¡ng**, kill sau 15 phÃºt, vÃ  **Ä‘á»c sandbox test tá»« CI** chá»© khÃ´ng cháº¡y (rubric, "What we run when marking", bÆ°á»›c 2). VÃ¬ váº­y:
-  - `npm test`: chá»‰ unit test cháº¡y offline, **khÃ´ng cáº§n Docker, Neon hay máº¡ng**. Test exactly-once cá»§a queue dÃ¹ng Postgres nhÃºng (`@electric-sql/pglite`) hoáº·c repo giáº£, khÃ´ng dÃ¹ng Neon.
-  - `npm run test:sandbox`: 9 attack + compile trong sandbox, cáº§n Docker; chá»‰ cháº¡y trong job CI `sandbox`.
-  - README ghi rÃµ hai lá»‡nh nÃ y.
-- **Oracle khÃ´ng cháº·n viá»‡c lÃ m sandbox.** Attack tests cháº¡y Ä‘Æ°á»£c trÃªn Docker á»Ÿ mÃ¡y local vÃ  trÃªn GitHub Actions; rubric cháº¥m C2 qua CI run cá»§a tag. Oracle chá»‰ cáº§n cho deploy (thá»© Ba) vÃ  cho "attack cá»§a ngÆ°á»i cháº¥m trÃªn deployment khÃ´ng lá»t ra".
 - KhÃ´ng dÃ¹ng `-v /var/run/docker.sock`, `--privileged`, `--env-file`, `-e MODEL_API_KEY` trong lá»‡nh cháº¡y sandbox.
 
 **Báº±ng chá»©ng:** `test/sandbox/`, job CI `sandbox` trÃªn tag, log tá»«ng attack fail Ä‘Ãºng cÃ¡ch.
@@ -318,7 +304,6 @@ model_calls(id, submission_id, constraint_id, provider, model, provider_request_
 3. Vá»›i má»—i tÃªn bá»‹ cáº¥m, chá»n matcher theo báº£ng trÃªn; duyá»‡t AST vÃ  **resolve scope**:
    - `std::sort(...)` â†’ báº¯t;
    - `sort(...)` chá»‰ báº¯t khi cÃ³ `using namespace std;` **vÃ ** khÃ´ng bá»‹ shadow bá»Ÿi hÃ m/namespace student khai bÃ¡o;
-   - `sort(...)` khÃ´ng qualify, file **khÃ´ng tá»± Ä‘á»‹nh nghÄ©a** `sort` â†’ váº«n báº¯t, ká»ƒ cáº£ khi khÃ´ng cÃ³ `using namespace std;`: bÃ i Ä‘Ã£ AC nghÄ©a lÃ  compiler Ä‘Ã£ resolve tá»›i `std::sort` (qua ADL vá»›i iterator cá»§a `std`);
    - `using std::sort;` rá»“i gá»i `sort(...)` â†’ báº¯t;
    - macro chá»©a tÃªn cáº¥m â†’ báº¯t á»Ÿ dÃ²ng `#define` **hoáº·c** dÃ²ng gá»i macro (má»™t trong hai lÃ  Ä‘á»§ evidence).
 4. Bá» qua theo **node type**, khÃ´ng theo text: comment, string literal, `#include <algorithm>` (include má»™t mÃ¬nh **khÃ´ng** pháº£i violation).
@@ -368,18 +353,10 @@ model_calls(id, submission_id, constraint_id, provider, model, provider_request_
 - DÃ¹ng structured output cá»§a Gemini (`responseSchema`).
 - Validate báº±ng `ajv`/`zod`; sai schema â†’ `unsure`.
 - Má»—i evidence line pháº£i **khá»›p chÃ­nh xÃ¡c** dÃ²ng code gá»‘c; lá»‡ch â†’ `unsure`.
-  - **ChÃº Ã½ dÃ²ng cÃ³ comment cuá»‘i dÃ²ng.** Model nhÃ¬n báº£n Ä‘Ã£ xoÃ¡ comment, nÃªn vá»›i dÃ²ng `sort(a); // x` nÃ³ tráº£ `"sort(a);"`. CÃ²n `eval.mjs` so evidence vá»›i **dÃ²ng cá»§a file `.cpp` gá»‘c** (chá»‰ bá» khoáº£ng tráº¯ng hai Ä‘áº§u, hÃ m `evidenceHits`). CÃ¡ch lÃ m: (1) kiá»ƒm tra `text` model tráº£ khá»›p dÃ²ng tÆ°Æ¡ng á»©ng trong **báº£n Ä‘Ã£ xoÃ¡ comment**; (2) khi lÆ°u verdict/ghi `predictions.jsonl`, **láº¥y `text` tá»« file gá»‘c theo sá»‘ dÃ²ng**. Thiáº¿u bÆ°á»›c 2 thÃ¬ violation bá»‹ tÃ­nh `bad-evidence`, khÃ´ng Ä‘Æ°á»£c tÃ­nh lÃ  caught.
-- **Má»™t lá»i gá»i = má»™t cáº·p (submission, constraint)**, hoáº·c Ä‘á»•i output thÃ nh máº£ng cÃ³ `constraint` id. Scaffold hiá»‡n lá»‡ch: `buildPrompt()` gá»­i má»i constraint trong má»™t prompt, cÃ²n `validateVerdictOutput()` chá»‰ nháº­n **má»™t** verdict.
-- **Chá»‘ng prompt injection:** xoÃ¡ comment khÃ´ng cháº·n Ä‘Æ°á»£c injection náº±m trong string literal (dev set cÃ³ tag `injection`). Bá»c code trong delimiter rÃµ rÃ ng, ghi trong system prompt ráº±ng má»i thá»© trong khá»‘i code lÃ  dá»¯ liá»‡u cáº§n review, khÃ´ng pháº£i chá»‰ dáº«n; verdict chá»‰ Ä‘Ã¡ng tin khi evidence khá»›p dÃ²ng tháº­t.
 - Timeout má»—i call (vÃ­ dá»¥ 20s) vÃ  timeout tá»•ng; quÃ¡ háº¡n â†’ `unsure`.
 - Cost cap/lab: Ä‘áº¿m token + USD; vÆ°á»£t cap â†’ dá»«ng gá»i, pháº§n cÃ²n láº¡i `unsure`.
 
-**Call log (báº¯t buá»™c):** JSONL + báº£ng DB, má»—i call cÃ³ `provider_request_id` (Gemini `responseId`), `model`, `tokens_in`, `tokens_out`, `latency_ms`, `cost_usd`, `submission_id`, `constraint_id`, **vÃ  `prompt` Ä‘Ã£ gá»­i (báº£n Ä‘Ã£ xoÃ¡ comment vÃ  danh tÃ­nh)**.
-
-- LÃ½ do: rubric C4 (17â€“20 Ä‘iá»ƒm) ghi model chá»‰ nháº­n statement, constraints vÃ  code Ä‘Ã£ bá» comment/danh tÃ­nh, vÃ  "**the prompts in your call log show it**". Call log khÃ´ng cÃ³ prompt thÃ¬ ngÆ°á»i cháº¥m khÃ´ng kiá»ƒm Ä‘Æ°á»£c Ä‘iá»u nÃ y.
-- KhÃ´ng log **code gá»‘c** vÃ  **danh tÃ­nh** (tÃªn, MSSV, email). Prompt Ä‘Ã£ áº©n danh lÃ  Ä‘Ãºng thá»© Ä‘Æ°á»£c phÃ©p gá»­i cho model nÃªn Ä‘Æ°á»£c phÃ©p lÆ°u.
-- `runs/pa3-dev/calls.jsonl` cá»§a dev run pháº£i cÃ³ Ä‘á»§ prompt.
-- `AGENTS.md` Ä‘Ã£ sá»­a cÃ¢u "Do not log ... submitted source code" cho khá»›p.
+**Call log (báº¯t buá»™c):** JSONL + báº£ng DB, má»—i call cÃ³ `provider_request_id` (Gemini `responseId`), `model`, `tokens_in`, `tokens_out`, `latency_ms`, `cost_usd`, `submission_id`, `constraint_id`. **KhÃ´ng log source code / identity.**
 
 **Cost/lab 80 bÃ i:** Ä‘o token tháº­t tá»« dev run, ghi cÃ´ng thá»©c vÃ o README + AI-LOG:
 
@@ -459,13 +436,6 @@ Quy táº¯c:
 - **KhÃ´ng ná»›i test/label** trong commit lÃ m xanh.
 - KhÃ´ng `git rebase`/squash láº¡i toÃ n bá»™ cuá»‘i bÃ i.
 
-**ÄÃ£ lá»‡ch má»™t láº§n (ghi tháº­t, khÃ´ng sá»­a lá»‹ch sá»­):**
-
-- `dc1060c` thÃªm client Gemini (`src/model/gemini.js`) **khÃ´ng kÃ¨m test**; `test/model/smoke.test.js` váº«n lÃ  placeholder `assert.ok(true)`. Commit nÃ y cÃ²n gá»™p hai pháº§n (client model + `docs/deploy.md`/`scripts/keepalive.mjs`).
-- `65d04fe` (scaffold) Ä‘áº·t stub cho má»i pháº§n trong má»™t commit; cháº¥p nháº­n Ä‘Æ°á»£c vÃ¬ lÃ  khung, nhÆ°ng tá»« Ä‘Ã¢y má»—i PR chá»‰ má»™t pháº§n.
-- Commit model tiáº¿p theo cá»§a TÃ­n: **test cho `callGemini` vá»›i `fetch` giáº£**, khÃ´ng gá»i máº¡ng (timeout â†’ `TIMEOUT`, response khÃ´ng pháº£i JSON, HTTP lá»—i, Ä‘á»c `usageMetadata`). KÃ¨m sá»­a nhá»: Ä‘Æ°a API key tá»« query string `?key=` sang header `x-goog-api-key` Ä‘á»ƒ key khÃ´ng lá»t vÃ o log URL.
-- Ghi rÃµ hai Ä‘iá»ƒm lá»‡ch nÃ y trong `AI-LOG.md` vÃ  `SELF_ASSESSMENT_REPORT.md`; khÃ´ng claim 5/5 cho C7 náº¿u khÃ´ng cháº¯c.
-
 ### 4.8 Criterion 8 â€” AI-LOG.md (5 Ä‘iá»ƒm) Â· cáº£ nhÃ³m, TÃ¹ng review
 
 Má»—i entry: ngÃ y, ngÆ°á»i, tool + model, pháº§n viá»‡c, **Changed** (Ä‘Ã£ sá»­a gÃ¬), **Rejected** (Ä‘á» xuáº¥t gÃ¬ bá»‹ tá»« chá»‘i vÃ  vÃ¬ sao). VÃ­ dá»¥ tháº­t cáº§n ghi:
@@ -487,17 +457,16 @@ ThÃªm **"never list"** vÃ o `AGENTS.md` theo báº£ng "Catching your assist
 
 - [x] **Dev set Ä‘Ã£ táº£i** tá»« <https://github.com/fithcmus/awad-leetkob-eval>, xÃ¡c minh SHA-256, copy vÃ o `PA03/leetkob-eval/` (giá»¯ LF).
 - [ ] ThÃªm `.gitattributes` vá»›i `leetkob-eval/** -text`; kiá»ƒm tra hash láº¡i sau khi copy vÃ o repo.
-- [x] **Render Web Service** vÃ  **Neon Postgres** Ä‘Ã£ cÃ³ (TÃ­n).
-- [ ] **Oracle Cloud Always Free (worker)** â€” váº«n cáº§n Ä‘Äƒng kÃ½ (TÃ­n): VM, Docker, user non-root, chá»‰ má»Ÿ SSH; budget cáº£nh bÃ¡o 0 USD. **Háº¡n chÃ³t: tá»‘i Chá»§ nháº­t 22/11.** KhÃ´ng cháº·n viá»‡c ngÃ y 22â€“23 (sandbox test cháº¡y local + CI), nhÆ°ng náº¿u xÃ¡c minh tháº» lá»—i hoáº·c háº¿t capacity thÃ¬ cÃ²n thá»i gian chuyá»ƒn sang GCP e2-micro trÆ°á»›c khi deploy thá»© Ba.
-- [ ] **Merge `feat/pa3-scaffold` vÃ o `main` qua PR tá»‘i nay**, Ä‘á»ƒ TÃ¹ng vÃ  Tuá»‡ táº¡o nhÃ¡nh tá»« `main` ngÃ y 22/11.
-- [ ] Render: set `DATABASE_URL` (Neon); **khÃ´ng** set `GEMINI_API_KEY` trÃªn Render.
-- [ ] Neon: cháº¡y migration schema (má»¥c 3.3) â€” TÃ¹ng.
+- [ ] **ÄÄƒng kÃ½ 3 dá»‹ch vá»¥ free:** Render Web Service, Oracle Cloud Always Free (worker), Neon Postgres.
+- [ ] Render: táº¡o service, set `DATABASE_URL`; **khÃ´ng** set `GEMINI_API_KEY` trÃªn Render.
+- [ ] Oracle: táº¡o VM, cÃ i Docker, user non-root, chá»‰ má»Ÿ SSH; báº­t budget cáº£nh bÃ¡o 0 USD.
+- [ ] Neon: táº¡o DB, láº¥y connection string TLS; cháº¡y migration schema (má»¥c 3.3).
 - [ ] Táº¡o cron-job.org ping `https://<render-app>.onrender.com/healthz` má»—i 10 phÃºt.
 - [ ] Táº¡o Gemini API key, báº­t **spending cap**, chá»‰ Ä‘áº·t trong env cá»§a worker trÃªn Oracle.
 - [ ] Chá»‘t schema + route (má»¥c 3.3, 3.4); táº¡o cÃ¡c nhÃ¡nh.
 - [ ] ThÃªm "never list" vÃ o `AGENTS.md`; cáº­p nháº­t `ci.yml` trigger `tags: ['pa2','pa3']`.
 
-**Gate tá»‘i nay:** Render tráº£ `/healthz` qua HTTPS; worker káº¿t ná»‘i Ä‘Æ°á»£c Neon; `Get-FileHash` cá»§a `eval.mjs`/`labels.jsonl` Ä‘Ãºng `c836â€¦`/`262câ€¦`. (`docker run hello-world` trÃªn Oracle dá»i sang gate Chá»§ nháº­t.)
+**Gate tá»‘i nay:** Render tráº£ `/healthz` qua HTTPS; `docker run hello-world` trÃªn Oracle OK; worker káº¿t ná»‘i Ä‘Æ°á»£c Neon; `Get-FileHash` cá»§a `eval.mjs`/`labels.jsonl` Ä‘Ãºng `c836â€¦`/`262câ€¦`.
 
 ### Chá»§ nháº­t 22/11 â€” Sandbox + queue + hard rules (TÃ¹ng, Tuá»‡)
 
@@ -506,7 +475,7 @@ ThÃªm **"never list"** vÃ o `AGENTS.md` theo báº£ng "Catching your assist
 - [ ] Tuá»‡: tree-sitter hard rules + toÃ n bá»™ fixture trap + test.
 - [ ] TÃ­n: khung UI táº¡o lab/ná»™p bÃ i; API enqueue.
 
-**Gate:** 9 attack fail Ä‘Ãºng; worker restart chá»‰ 1 bá»™ verdict; `MODEL_OFF` hard rule cho káº¿t quáº£ Ä‘Ãºng trÃªn fixture; **`docker run hello-world` trÃªn Oracle OK** (hoáº·c Ä‘Ã£ chuyá»ƒn sang GCP e2-micro); Ä‘Ã£ chá»‘t dÃ¹ng Neon hay Postgres trÃªn Oracle (má»¥c 3.1).
+**Gate:** 9 attack fail Ä‘Ãºng; worker restart chá»‰ 1 bá»™ verdict; `MODEL_OFF` hard rule cho káº¿t quáº£ Ä‘Ãºng trÃªn fixture.
 
 ### Thá»© Hai 23/11 â€” Model + limits + UI (TÃ­n, TÃ¹ng)
 
@@ -600,9 +569,6 @@ ThÃªm **"never list"** vÃ o `AGENTS.md` theo báº£ng "Catching your assist
 | Exactly-once race | TB | Máº¥t Ä‘iá»ƒm C2 | Unique constraint + transaction + test restart |
 | Render free ngá»§ / háº¿t 750 h | Cao | NgÆ°á»i cháº¥m má»Ÿ link bá»‹ cháº­m hoáº·c 502 | Cron ping `/healthz` má»—i 10 phÃºt; náº¿u háº¿t háº¡n má»©c thÃ¬ chuyá»ƒn web sang Oracle (phÆ°Æ¡ng Ã¡n A) |
 | Neon cold start / máº¥t káº¿t ná»‘i | TB | Request Ä‘áº§u cháº­m, worker retry | Retry cÃ³ backoff; connection pool; timeout rÃµ rÃ ng |
-| **Neon háº¿t 100 CU-hours/thÃ¡ng** | Cao | DB bá»‹ suspend tá»›i thÃ¡ng sau â†’ deployment cháº¿t giá»¯a PA#4 | Worker poll 24/7 giá»¯ DB thá»©c; xem má»¥c 3.1: cháº¡y háº¿t trÃªn Oracle A1, hoáº·c idle backoff + theo dÃµi CU-hours |
-| **`npm test` cáº§n máº¡ng/Docker/DB** | Cao | NgÆ°á»i cháº¥m cháº¡y check vá»›i máº¡ng Ä‘Ã£ cáº¯t â†’ Ä‘á» | `npm test` chá»‰ offline (pglite/repo giáº£); sandbox test tÃ¡ch sang `npm run test:sandbox` trong job CI riÃªng (má»¥c 4.2) |
-| Evidence lá»‡ch vÃ¬ comment cuá»‘i dÃ²ng | TB | Violation thÃ nh `bad-evidence`, recall tá»¥t | Láº¥y `text` tá»« file gá»‘c theo sá»‘ dÃ²ng (má»¥c 4.4) |
 | Render â†” Oracle lá»‡ch máº¡ng | TB | Job káº¹t, verdict cháº­m | Worker poll 1â€“2 s; health check hai Ä‘áº§u; log `job_id` |
 | Tá»± cháº¥m cao hÆ¡n thá»±c táº¿ | TB | Trá»« tá»›i âˆ’10 | Cháº¥m sÃ¡t rubric, má»—i dÃ²ng cÃ³ evidence |
 | QuÃªn giá»¯ deployment sau 25/11 | Cao | PA#4 red team khÃ´ng Ä‘Ã¡nh Ä‘Æ°á»£c | Báº­t monitor + nháº¯c lá»‹ch |
@@ -612,7 +578,7 @@ ThÃªm **"never list"** vÃ o `AGENTS.md` theo báº£ng "Catching your assist
 ## 8. Viá»‡c cáº§n chá»‘t ngay (blockers)
 
 1. âœ… **Dev set:** Ä‘Ã£ táº£i tá»« <https://github.com/fithcmus/awad-leetkob-eval>, hash Ä‘Ãºng, Ä‘Ã£ copy vÃ o repo lÃ m viá»‡c `PA02/leetkob-eval/` + manifest `PA02/leetkob-eval.sha256`.
-2. ? **Ki?n tr�c:** ch?t **Render free (web) + Azure for Students VM (worker) + Neon Postgres**. Oracle Always Free hết capacity A1, chuyển sang Azure for Students.
+2. âœ… **Kiáº¿n trÃºc:** chá»‘t **Render free (web) + Oracle Cloud Always Free (worker) + Neon Postgres**. Cáº§n Ä‘Äƒng kÃ½ 3 tÃ i khoáº£n; Oracle cáº§n tháº» xÃ¡c minh â€” ai Ä‘á»©ng tÃªn vÃ  lÃ m trong hÃ´m nay.
 3. âœ… **Gemini key:** TÃ¹ng táº¡o, spending cap = 0 USD (chá»‰ free tier), chá»‰ Ä‘áº·t trÃªn Oracle worker.
 4. **FAQ product owners:** váº«n chÆ°a cÃ³ cÃ¢u tráº£ lá»i â€” xem giáº£i thÃ­ch á»Ÿ má»¥c 8.1.
 5. âœ… **TÃªn repo:** giá»¯ `2026-AWAD-PA02`; lÃ m trá»±c tiáº¿p trÃªn repo nÃ y.

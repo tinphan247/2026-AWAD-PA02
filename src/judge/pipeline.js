@@ -138,6 +138,7 @@ async function labSpentUsd(db, labId) {
  *   modelJudge?: typeof judgeConstraint,
  *   recorder?: { record: (entry: import('../model/calllog.js').CallLogEntry) => Promise<void> } | null,
  *   now?: () => Date,
+ *   identities?: string[] | ((submission: SubmissionToJudge) => string[]) | undefined,
  * }} options
  * @returns {(submission: SubmissionToJudge) => Promise<JudgeResult>}
  */
@@ -151,6 +152,7 @@ export function createJudge({
   modelJudge = judgeConstraint,
   recorder = null,
   now = () => new Date(),
+  identities = undefined,
 }) {
   const ask = apiKey.length > 0 ? modelJudge : null;
 
@@ -167,6 +169,43 @@ export function createJudge({
     const lab = await loadLab(db, submission.labId);
     const run = await sandbox({ sourceCode: submission.sourceCode, tests: lab.tests });
     let spentUsd = await labSpentUsd(db, submission.labId);
+
+    // Collect every identity the caller knows about for this submission, so
+    // anonymizeCode can redact a name or MSSV that survives in a string literal
+    // (comments are already blanked, e-mail addresses always are). The list is
+    // best-effort: nothing here must stop a submission from being judged.
+    /** @type {string[]} */
+    const collected = [];
+    if (typeof identities === 'function') {
+      try {
+        const fromFn = identities(submission);
+        if (Array.isArray(fromFn)) collected.push(...fromFn);
+      } catch {
+        // ignore
+      }
+    } else if (Array.isArray(identities)) {
+      collected.push(...identities);
+    }
+    if (Array.isArray(submission.identities)) collected.push(...submission.identities);
+    if (typeof submission.studentName === 'string' && submission.studentName.trim() !== '') {
+      collected.push(submission.studentName);
+    }
+    if (submission.studentId !== undefined && submission.studentId !== null) {
+      collected.push(String(submission.studentId));
+    }
+    try {
+      const { rows } = await db.query(
+        `SELECT u.email FROM users u JOIN submissions s ON s.student_id = u.id WHERE s.id = $1`,
+        [submission.id],
+      );
+      if (rows[0]?.email) {
+        collected.push(String(rows[0].email));
+        const local = String(rows[0].email).split('@')[0];
+        if (local) collected.push(local);
+      }
+    } catch {
+      // ignore: identity lookup is best-effort
+    }
 
     /** @type {VerdictRow[]} */
     const verdicts = [];
@@ -185,6 +224,7 @@ export function createJudge({
               statement: lab.statement,
               constraint,
               sourceCode: submission.sourceCode,
+              identities: collected,
               apiKey,
               model,
               timeoutMs,

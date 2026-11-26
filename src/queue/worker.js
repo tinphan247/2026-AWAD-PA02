@@ -20,6 +20,9 @@ import {
  *   labId: number,
  *   sourceCode: string,
  *   constraints: Array<{ id: number, text: string, kind: string, deduction: number }>,
+ *   identities?: string[],
+ *   studentName?: string,
+ *   studentId?: number | string,
  * }} SubmissionToJudge
  *
  * @typedef {(submission: SubmissionToJudge) => Promise<import('./claim.js').JudgeResult>} Judge

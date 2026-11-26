@@ -788,7 +788,7 @@
   redacted by the pipeline; a name or MSSV that a student types into a string
   literal is redacted only when the submission carries it. nonymizeCode
   itself already supports arbitrary identities. A new test in
-  	est/unit/model-judge.test.js checks that an identity in a string literal
+  `test/unit/model-judge.test.js checks that an identity in a string literal
   becomes [REDACTED] in the prompt sent to the model. src/model/judge.js wraps callLog.record so
   a recorder failure after a paid call cannot retry and re-bill the job.
   worker/index.js prints error.message only. src/web/form.js adds the

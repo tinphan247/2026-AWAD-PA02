@@ -62,9 +62,9 @@ function basename(filename) {
 export function createWebRoutes({ store, clock = { now: () => new Date() } }) {
   /**
    * @param {import('node:http').IncomingMessage} req
-   * @returns {import('./store.js').User | null}
+   * @returns {Promise<import('./store.js').User | null>}
    */
-  function currentUser(req) {
+  async function currentUser(req) {
     const token = parseCookies(req.headers.cookie)[SESSION_COOKIE];
     if (token === undefined || token.length === 0) return null;
     return store.findUserByToken(token);
@@ -102,10 +102,10 @@ export function createWebRoutes({ store, clock = { now: () => new Date() } }) {
   /**
    * @param {import('node:http').ServerResponse} res
    * @param {import('./store.js').User} user
-   * @returns {void}
+   * @returns {Promise<void>}
    */
-  function renderTaHome(res, user) {
-    const labs = store.listLabs(user.classId);
+  async function renderTaHome(res, user) {
+    const labs = await store.listLabs(user.classId);
     const rows =
       labs.length === 0
         ? '<p class="muted">Chưa có lab nào. Tạo lab đầu tiên.</p>'
@@ -198,20 +198,20 @@ export function createWebRoutes({ store, clock = { now: () => new Date() } }) {
    * @param {import('./store.js').User} user
    * @param {import('../domain/labs.js').Lab} lab
    * @param {'queue' | 'all'} tab
-   * @returns {void}
+   * @returns {Promise<void>}
    */
-  function renderReview(res, user, lab, tab) {
-    const submissions = store
-      .listSubmissions({ labId: lab.id })
-      .filter((submission) => submission.counted);
-    const allVerdicts = store.listVerdictsForLab(lab.id);
+  async function renderReview(res, user, lab, tab) {
+    const submissions = (await store.listSubmissions({ labId: lab.id })).filter(
+      (submission) => submission.counted,
+    );
+    const allVerdicts = await store.listVerdictsForLab(lab.id);
     const queueIds = new Set(selectReviewQueue(allVerdicts).map((verdict) => verdict.id));
 
     /** @type {string[]} */
     const rows = [];
     for (const submission of submissions) {
       const student = store.findUser(submission.studentId);
-      const verdicts = store.listVerdictsForSubmission(submission.id);
+      const verdicts = await store.listVerdictsForSubmission(submission.id);
 
       for (const constraint of lab.constraints) {
         const verdict = verdicts.find((entry) => entry.constraintId === constraint.id) ?? null;
@@ -238,7 +238,7 @@ export function createWebRoutes({ store, clock = { now: () => new Date() } }) {
       }
     }
 
-    const calls = store.listModelCalls(lab.id);
+    const calls = await store.listModelCalls(lab.id);
     const cost = summarizeLabCost(
       calls.map((call) => ({
         tokensIn: call.tokensIn,
@@ -271,10 +271,10 @@ export function createWebRoutes({ store, clock = { now: () => new Date() } }) {
   /**
    * @param {import('node:http').ServerResponse} res
    * @param {import('./store.js').User} user
-   * @returns {void}
+   * @returns {Promise<void>}
    */
-  function renderStudentHome(res, user) {
-    const labs = store.listLabs(user.classId);
+  async function renderStudentHome(res, user) {
+    const labs = await store.listLabs(user.classId);
     const rows =
       labs.length === 0
         ? '<p class="muted">Chưa có lab nào.</p>'
@@ -297,10 +297,10 @@ export function createWebRoutes({ store, clock = { now: () => new Date() } }) {
    * @param {import('node:http').ServerResponse} res
    * @param {import('./store.js').User} user
    * @param {import('../domain/labs.js').Lab} lab
-   * @returns {void}
+   * @returns {Promise<void>}
    */
-  function renderStudentLab(res, user, lab) {
-    const submissions = store.listSubmissions({ labId: lab.id, studentId: user.id });
+  async function renderStudentLab(res, user, lab) {
+    const submissions = await store.listSubmissions({ labId: lab.id, studentId: user.id });
     const latest = submissions.find((submission) => submission.counted) ?? null;
 
     const constraintRows = lab.constraints
@@ -350,10 +350,10 @@ export function createWebRoutes({ store, clock = { now: () => new Date() } }) {
    * @param {import('node:http').ServerResponse} res
    * @param {import('./store.js').User} user
    * @param {Submission} submission
-   * @returns {void}
+   * @returns {Promise<void>}
    */
-  function renderSubmission(res, user, submission) {
-    const lab = store.findLab(submission.labId);
+  async function renderSubmission(res, user, submission) {
+    const lab = await store.findLab(submission.labId);
     if (lab === null) {
       sendError(res, 404, 'Không tìm thấy lab của bài nộp.', { user });
       return;
@@ -371,13 +371,13 @@ export function createWebRoutes({ store, clock = { now: () => new Date() } }) {
             .join('')}
           </tbody></table>`;
 
+    const submissionVerdicts = await store.listVerdictsForSubmission(submission.id);
     const verdicts =
       lab.publishedAt === null
         ? `<p class="muted">Verdict constraint chưa được công bố. Trợ giảng xem lại trước
            (FAQ-08). Bạn vẫn thấy constraint và mức trừ ở trên.</p>`
         : `<table><thead><tr><th>Constraint</th><th>Verdict</th><th>Trừ</th></tr></thead><tbody>
-          ${store
-            .listVerdictsForSubmission(submission.id)
+          ${submissionVerdicts
             .map((verdict) => {
               const constraint = lab.constraints.find((entry) => entry.id === verdict.constraintId);
               return `<tr><td>${escapeHtml(constraint?.text ?? '')}</td>
@@ -430,7 +430,7 @@ export function createWebRoutes({ store, clock = { now: () => new Date() } }) {
     }
 
     if (path === '/') {
-      const user = currentUser(req);
+      const user = await currentUser(req);
       if (user === null) {
         renderLogin(res);
         return true;
@@ -451,7 +451,7 @@ export function createWebRoutes({ store, clock = { now: () => new Date() } }) {
 
       const form = await readForm(req, 64 * 1024);
       const token = (form.fields.token ?? '').trim();
-      const user = token.length === 0 ? null : store.findUserByToken(token);
+      const user = token.length === 0 ? null : await store.findUserByToken(token);
       if (user === null) {
         renderLogin(res, 'Token không hợp lệ.');
         return true;
@@ -470,7 +470,7 @@ export function createWebRoutes({ store, clock = { now: () => new Date() } }) {
       return true;
     }
 
-    const user = currentUser(req);
+    const user = await currentUser(req);
 
     if (path === '/ta' || path.startsWith('/ta/')) {
       if (user === null) {
@@ -483,7 +483,7 @@ export function createWebRoutes({ store, clock = { now: () => new Date() } }) {
       }
 
       if (path === '/ta' && method === 'GET') {
-        renderTaHome(res, user);
+        await renderTaHome(res, user);
         return true;
       }
 
@@ -531,7 +531,7 @@ export function createWebRoutes({ store, clock = { now: () => new Date() } }) {
           return true;
         }
 
-        const lab = store.createLab({
+        const lab = await store.createLab({
           classId: user.classId,
           title,
           statement,
@@ -551,7 +551,7 @@ export function createWebRoutes({ store, clock = { now: () => new Date() } }) {
           sendError(res, 405, 'Chỉ hỗ trợ GET.', { user });
           return true;
         }
-        const lab = store.findLab(reviewId);
+        const lab = await store.findLab(reviewId);
         if (lab === null) {
           sendError(res, 404, 'Không tìm thấy lab.', { user });
           return true;
@@ -560,7 +560,7 @@ export function createWebRoutes({ store, clock = { now: () => new Date() } }) {
           sendError(res, 403, 'Lab này thuộc lớp khác.', { user });
           return true;
         }
-        renderReview(res, user, lab, url.searchParams.get('tab') === 'all' ? 'all' : 'queue');
+        await renderReview(res, user, lab, url.searchParams.get('tab') === 'all' ? 'all' : 'queue');
         return true;
       }
 
@@ -571,13 +571,13 @@ export function createWebRoutes({ store, clock = { now: () => new Date() } }) {
           return true;
         }
 
-        const verdict = store.findVerdict(verdictId);
+        const verdict = await store.findVerdict(verdictId);
         if (verdict === null) {
           sendError(res, 404, 'Không tìm thấy verdict.', { user });
           return true;
         }
-        const submission = store.findSubmission(verdict.submissionId);
-        const lab = submission === null ? null : store.findLab(submission.labId);
+        const submission = await store.findSubmission(verdict.submissionId);
+        const lab = submission === null ? null : await store.findLab(submission.labId);
         if (submission === null || lab === null) {
           sendError(res, 404, 'Không tìm thấy bài nộp.', { user });
           return true;
@@ -600,7 +600,7 @@ export function createWebRoutes({ store, clock = { now: () => new Date() } }) {
           return true;
         }
 
-        store.decideVerdict(verdictId, decision, evidence);
+        await store.decideVerdict(verdictId, decision, evidence);
         redirect(res, `/ta/labs/${lab.id}/review`);
         return true;
       }
@@ -620,13 +620,13 @@ export function createWebRoutes({ store, clock = { now: () => new Date() } }) {
       }
 
       if (path === '/student' && method === 'GET') {
-        renderStudentHome(res, user);
+        await renderStudentHome(res, user);
         return true;
       }
 
       const labId = idFrom(path, STUDENT_LAB_ROUTE);
       if (labId !== null && method === 'GET') {
-        const lab = store.findLab(labId);
+        const lab = await store.findLab(labId);
         if (lab === null) {
           sendError(res, 404, 'Không tìm thấy lab.', { user });
           return true;
@@ -635,7 +635,7 @@ export function createWebRoutes({ store, clock = { now: () => new Date() } }) {
           sendError(res, 403, 'Lab này thuộc lớp khác.', { user });
           return true;
         }
-        renderStudentLab(res, user, lab);
+        await renderStudentLab(res, user, lab);
         return true;
       }
 
@@ -645,7 +645,7 @@ export function createWebRoutes({ store, clock = { now: () => new Date() } }) {
           sendError(res, 405, 'Chỉ hỗ trợ POST.', { user });
           return true;
         }
-        const lab = store.findLab(submitLabId);
+        const lab = await store.findLab(submitLabId);
         if (lab === null) {
           sendError(res, 404, 'Không tìm thấy lab.', { user });
           return true;
@@ -671,7 +671,7 @@ export function createWebRoutes({ store, clock = { now: () => new Date() } }) {
           return true;
         }
 
-        const submission = store.createSubmission({
+        const submission = await store.createSubmission({
           labId: lab.id,
           studentId: user.id,
           sourceCode,
@@ -684,7 +684,7 @@ export function createWebRoutes({ store, clock = { now: () => new Date() } }) {
 
       const submissionId = idFrom(path, STUDENT_SUBMISSION_ROUTE);
       if (submissionId !== null && method === 'GET') {
-        const submission = store.findSubmission(submissionId);
+        const submission = await store.findSubmission(submissionId);
         if (submission === null) {
           sendError(res, 404, 'Không tìm thấy bài nộp.', { user });
           return true;
@@ -693,7 +693,7 @@ export function createWebRoutes({ store, clock = { now: () => new Date() } }) {
           sendError(res, 403, 'Đây không phải bài nộp của bạn.', { user });
           return true;
         }
-        renderSubmission(res, user, submission);
+        await renderSubmission(res, user, submission);
         return true;
       }
 

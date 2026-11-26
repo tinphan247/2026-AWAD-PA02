@@ -26,7 +26,7 @@ import { isBanList } from '../domain/labs.js';
  *   labId: number,
  *   studentId: number,
  *   sourceCode: string,
- *   status: 'queued' | 'judging' | 'judged',
+ *   status: 'queued' | 'judging' | 'judged' | 'error',
  *   counted: boolean,
  *   submittedAt: string,
  *   tests: TestResult[],

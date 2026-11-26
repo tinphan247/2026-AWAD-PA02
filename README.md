@@ -1,6 +1,6 @@
-# LeeTKOB â€” PA#2 harness and quality gate
+# LeeTKOB — PA#2 harness and quality gate
 
-PA#2 checkpoint for **CSC13114 â€” Advanced Web Application Development**.
+PA#2 checkpoint for **CSC13114 — Advanced Web Application Development**.
 This repository is the ground the LeeTKOB product stands on before the LLM
 feature arrives in PA#3.
 
@@ -39,7 +39,7 @@ npm run dev
 ```
 
 The server listens on `127.0.0.1:3000` by default. Override with `PORT` /
-Architecture: Render (web) + a cloud VM (worker and Docker
+`HOST`.
 
 ## Project layout
 
@@ -84,9 +84,20 @@ so no model call can create a charge while the cap stands. The application may
 use free-tier quota only, and the account owner must check the provider's
 free-tier limits before any call. The provider and exact model ID are chosen
 in PA#3 after that check; they are deliberately not fixed here. The account
-owner is TÃ¹ng (security lead) and TÃ­n reviews the evidence. The account owner
+owner is Tùng (security lead) and Tín reviews the evidence. The account owner
 records the provider-side limit and its evidence before the first PA#3 call.
 PA#3 per-lab cost will be measured during evaluation.
 
 The history scan procedure and its scope are recorded in
 `docs/evidence/secret-scan.txt`. Repeat the scan on the final submission commit.
+
+
+## PA#3 (LeeTKOB)
+
+Architecture: Render (web) + a cloud VM (worker and Docker sandbox) + Neon
+(Postgres) + Gemini free tier. See [docs/deploy.md](docs/deploy.md) and
+[docs/azure-vm.md](docs/azure-vm.md).
+
+In PA#3 the model API key is read only on the worker VM. It is never set on
+Render and never passed to the sandbox. Runbook and bootstrap script:
+deploy/oracle-setup.sh (provider-agnostic).

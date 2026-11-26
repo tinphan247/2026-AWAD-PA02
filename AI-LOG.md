@@ -386,6 +386,102 @@
   workspace, and could not see the CI status of `feat/pa3-scaffold`.
 - Evidence: [PR #13](https://github.com/tinphan247/2026-AWAD-PA02/pull/13).
 
+## 2026-11-22 — Tín — Claude (DeepSeek V4.1 Flash): PA#3 model and TA/student flow
+
+- Task: implement Tín's PA#3 share: the anonymised prompt and one-call-per-
+  constraint model path (C4), plus the TA create-lab, student submit and TA
+  review flow (C1).
+- Input: `PA3_PLAN.md` §4, `AGENTS.md`, the dev-set `constraints.json` shape,
+  and the plan review recorded in PR #13.
+- Result: `anonymizeCode()` blanks `//` and block comments without changing
+  line count or length, redacts caller-supplied names/MSSVs and emails, and
+  `buildPrompt()` now sends exactly one constraint per call. Added
+  `VERDICT_RESPONSE_SCHEMA`, `src/model/cost.js` (list-price arithmetic) and
+  `src/model/calllog.js` (JSONL with the anonymised prompt, request id, tokens,
+  latency and cost). The web flow is server-rendered: token login, TA lab form
+  with multi-file `NN.in`/`NN.out` upload, student page with constraints and
+  deductions, submission status, and a review page with the FAQ-10 queue plus
+  an all-verdicts tab; a TA from another class gets 403.
+- Changed: `src/app.js` mounts the web router before the `/v1` contract and
+  keeps `/v1` untouched; `testing.webStore` is the seam tests use to inject
+  worker verdicts. `src/domain/labs.js` and `review.js` replace their throwing
+  stubs with the helpers the routes use.
+- Rejected: a template engine or client framework; both would add dependencies
+  for a flow that plain HTML covers.
+- Rejected: sending all constraints in one prompt; a single bad answer would
+  have poisoned every constraint of that submission.
+- Not verified: a real Gemini call (no key yet), the Oracle worker and the
+  Postgres repo (Tùng's branches are not merged), and the checker dev run
+  (Tuệ). The 10% pass sample is pseudo-random and stable by verdict id, not a
+  true random draw; this is recorded in `src/domain/review.js`.
+- Evidence: `npm test` 143/143, `npm run lint`, `npm run format:check`,
+  `npm run typecheck`; `test/web/flow.test.js`, `test/unit/model-*.test.js`,
+  `test/unit/review-queue.test.js`.
+
+## 2026-11-22 — Tín — Claude (DeepSeek V4.1 Flash): model judge pipeline and README
+
+- Task: finish the C4 integration point the worker will call, and document the
+  PA#3 prototype in the README.
+- Input: the plan review requirement that evidence text comes from the original
+  line, and the worker boundary agreed with Tùng (Tín does not edit
+  `src/queue/`).
+- Result: `src/model/judge.js` runs anonymise → one-constraint prompt →
+  structured call → schema check → evidence verification against the
+  anonymised code → mapping to the original line. Timeout, schema failure,
+  evidence mismatch, model error and cost cap all return `unsure` with a
+  reason; a model `pass` drops any evidence; a violation without evidence
+  becomes unsure. The call log keeps the anonymised prompt.
+- Changed: added `model_error` to `UNSURE_REASONS`; README now describes the
+  PA#3 flow, accounts and the model pipeline; `PA3.md` gained a local demo
+  walkthrough, a cost projection and a video script link; added
+  `PA3_PROGRESS.md` (per-person done/blocked board) and `docs/video-script.md`;
+  `.env.example` lists `MODEL_TIMEOUT_MS` and `MODEL_CALL_LOG`; added the root
+  `Dockerfile` and `.dockerignore` that `docker-compose.yml` already referenced.
+- Rejected: letting the judge call the model when the lab has reached its cost
+  cap; it returns `cost_cap` without a network call.
+- Rejected: trusting the model's evidence text for the database or predictions
+  file; the judge always writes the original line, trimmed.
+- Not verified: a real Gemini call (no key yet) and the worker wiring (Tùng's
+  branch). The judge is tested with an injected fake model only. The Docker
+  daemon was not running, so the new root `Dockerfile` was not built locally;
+  `docker compose up --build` still needs a first run on the Oracle VM or a
+  machine with Docker started.
+- Evidence: `test/unit/model-judge.test.js`; `npm test` 153/153.
+
+## 2026-11-22 — Tín — Claude (DeepSeek V4.1 Flash): Oracle VM runbook and worker unit
+
+- Task: turn the one-paragraph Oracle step in `docs/deploy.md` into something
+  Tín can follow while signing up, and make the VM reproducible.
+- Input: `docs/deploy.md` §3, `docker-compose.yml`, and Tùng's
+  `src/sandbox/run.js` on `tung/sandbox` (it spawns `docker run` with
+  `SANDBOX_IMAGE`, names containers `leetkob-sbx-*`, and needs the Docker CLI
+  on the host).
+- Result: `docs/oracle-vm.md` covers signup and card verification, home region,
+  A1 capacity versus the AMD micro, SSH keys from Windows, the security list,
+  the bootstrap script, the env file, systemd, Neon, Render, the 10-minute
+  cron, a verification sequence, cost guards, troubleshooting and the
+  fallback. Added `deploy/oracle-setup.sh` (idempotent: swap on small shapes,
+  Docker, Node 24, clone, `npm ci --omit=dev`, sandbox image, directories,
+  smoke tests), `deploy/leetkob-worker.service` (host service with
+  `SupplementaryGroups=docker`, restart and sandbox cleanup) and
+  `deploy/worker.env.example`.
+- Changed: the root `Dockerfile` now sets `HOST=0.0.0.0`; `src/main.js`
+  defaults to `127.0.0.1`, so the Render/Docker service would have refused
+  every external connection. `docs/deploy.md` now links the runbook and no
+  longer recommends `docker compose up worker` for production: compose would
+  start a local Postgres, and a worker container would need the Docker socket.
+- Rejected: mounting `/var/run/docker.sock` into a worker container so compose
+  could run it; the sandbox rules forbid that pattern and the host service
+  needs no socket mount.
+- Rejected: publishing ports 3000 or 5432 on the VM; the worker is outbound
+  only, so the security list keeps SSH from one IP.
+- Not verified: there is no Oracle account yet, so neither the script nor the
+  unit has run on a VM; the sandbox image was not built locally because the
+  Docker daemon was not running. `runWorker` is still a stub on `main`, so the
+  runbook tells the reader to enable the service only after Tùng merges.
+- Evidence: `docs/oracle-vm.md`, `deploy/*`; `npm test` 153/153, `npm run
+  lint`, `npm run format:check`, `npm run typecheck`.
+
 ## 2026-11-22 — Tùng — Claude (Claude Opus 5.5): sandbox and the nine attacks
 
 - Task: criterion 2, sandbox half (PA3_PLAN.md §4.2, §4.7 row 1): sandbox
@@ -602,3 +698,107 @@
 - Verified: four checks green on Node 24.22.3 (234 tests, 12 Docker attack
   tests skipped); the 9 model-off checker tests still pass with the wider
   block.
+
+## 2026-11-24 — Tín — Claude (DeepSeek V4.1 Flash Free): merge main, wire the worker judge
+
+- Task: bring `main` (sandbox, schema, queue, hard rules, checker) into
+  `feat/pa3-scaffold`, then replace the `worker/index.js` judge stub with the
+  real sandbox → hard rules → model pipeline (criteria 2, 3, 4 integration).
+- Input: `main` at `f601c06`, `PA3_PROGRESS.md` blockers, `src/queue/worker.js`
+  (`loadSubmission` returns no statement or tests), `src/model/judge.js`,
+  `src/sandbox/run.js`, `src/checker/hard-rules/index.js`.
+- Result: merge `554d7bf`, conflicts only in `.dockerignore` (kept the narrower
+  PA#3 context) and `AI-LOG.md` (kept both sides in date order). New
+  `src/judge/pipeline.js` builds the judge: it loads the lab row, runs the
+  sandbox, decides every ban list with `parseBanList` + `rules.check`, asks the
+  model once per semantic pair, and accumulates `model_calls` cost so later
+  pairs see the money earlier ones spent. New `src/judge/recorder.js` writes
+  each call to `model_calls` (authoritative) and optionally to JSONL.
+  `worker/index.js` is now only env wiring.
+- Changed: an `unsure` reason outside the `verdicts.unsure_reason` CHECK is
+  stored as `model_unsure`; otherwise one unexpected reason would abort the
+  transaction that stores the whole submission and re-bill the model on the
+  retry. With no `MODEL_API_KEY` the worker runs the hard rules and marks every
+  semantic pair `unsure` without a call, the same contract as `MODEL_OFF=1`.
+  `deploy/worker.env.example` now lists only what the worker reads, and
+  `docs/oracle-vm.md` no longer says the queue is a stub.
+- Rejected: extending `loadSubmission()` in `src/queue/worker.js` with the
+  statement and tests — that file is Tùng's, and the pipeline can query the lab
+  row itself. Rejected: adding `model_error` to the schema now; that is a schema
+  change and needs Tùng, so the worker maps it.
+- Not verified: no real model call, no Docker run and no VM, so the pipeline has
+  only run against injected sandbox and model doubles.
+- Evidence: `npm test` 277 tests (265 pass, 12 Docker-only skipped), `npm run
+  lint`, `npm run format:check`, `npm run typecheck`; merge commit `554d7bf`.
+
+## 2026-11-26 — Tín — Claude (DeepSeek V4.1 Flash Free): Postgres-backed web store
+
+- Task: the web UI wrote labs, submissions and verdicts to an in-memory store,
+  so nothing reached `submissions`/`jobs` and the deployed worker had nothing to
+  claim. Wire the UI to the same Postgres schema the worker uses.
+- Result: new `src/web/postgres-store.js` implements the existing web store
+  interface on `db.query`/`db.transaction`. It seeds the demo classes and users
+  idempotently (tokens still come from `defaultSeed()`, so no migration and no
+  schema change), and it creates a submission, flips `is_counted` on the
+  previous one and calls `enqueueJob` in one transaction, so exactly one counted
+  submission per student/lab becomes a job. `addVerdict` upserts on
+  (submission, constraint); `decideVerdict` keeps the model evidence on a TA
+  `pass` and replaces it on `violation`. `src/main.js` builds the store and runs
+  `migrate(db)` at boot when `DATABASE_URL` is set; `src/server.js` passes it
+  into `createApp`.
+- Changed: the `src/web/store.js` typedef accepts `status: 'error'`, which the
+  worker already writes.
+- Rejected: a migration for demo accounts. `defaultSeed()` already has the
+  tokens; the store maps token to `<name>@demo.leetkob` and creates the class
+  membership on first boot.
+- Not verified: no real Neon or Docker run; the new tests use pglite and drive
+  `processNextJob` with a fake sandbox and a fake model.
+- Evidence: `test/web/postgres-store.test.js` (7 tests), `npm run lint`,
+  `npm run typecheck`.
+
+## 2026-11-26 — Tín — Claude (DeepSeek V4.1 Flash Free): Azure runbook after Oracle capacity
+
+- Task: Oracle Always Free refused A1 capacity in AD-1 and Tín can sign in to
+  Azure for Students. Add a runbook for the same worker + sandbox on Azure
+  without forking the bootstrap script.
+- Result: new `docs/azure-vm.md` (portal fields, B1ms/B2s, NSG open only for
+  SSH from one IP, script, env, systemd, cost, cleanup).
+  `deploy/oracle-setup.sh` is now documented as provider-agnostic and installs
+  `/etc/systemd/system/leetkob-worker.service` with `User=$USER` and
+  `WorkingDirectory=$REPO_DIR`, because the unit template hard-codes the Oracle
+  `ubuntu` account and would silently fail on Azure's `azureuser`.
+  `docs/deploy.md`, `PA3.md` §1, `PA3_PROGRESS.md` and
+  `deploy/worker.env.example` point at Azure and keep Oracle as the fallback.
+- Rejected: renaming the script to `vm-setup.sh`. Docs, CI and earlier log
+  entries already reference the old path, and the script has nothing
+  Oracle-specific.
+- Not verified: no Azure VM created yet, so the script has not run on Azure.
+- Evidence: docs and script only; the four checks are unaffected.
+
+
+## 2026-11-26 — Tín — Claude (DeepSeek V4.1 Flash Free): review fixes before merge
+
+- Task: address Tùng's two blocking comments on PR feat/pa3-scaffold (c36328c):
+  anonymise identity in string literals, and repair the double-encoded doc files.
+- Result: src/judge/pipeline.js now collects whatever identity is
+  available for the submission (submission.identities, studentName, studentId
+  and the account's e-mail plus its local part looked up in users) and
+  passes them to judgeConstraint, which feeds them to nonymizeCode. The
+  users table has no name/MSSV column, so in production only the e-mail is
+  redacted by the pipeline; a name or MSSV that a student types into a string
+  literal is redacted only when the submission carries it. nonymizeCode
+  itself already supports arbitrary identities. A new test in
+  `test/unit/model-judge.test.js checks that an identity in a string literal
+  becomes [REDACTED] in the prompt sent to the model. src/model/judge.js wraps callLog.record so
+  a recorder failure after a paid call cannot retry and re-bill the job.
+  worker/index.js prints error.message only. src/web/form.js adds the
+  Secure flag to the session cookie in production. PA3_PLAN.md and
+  README.md were restored from main and re-saved as UTF-8 without BOM, with
+  the Oracle-to-Azure edits applied on top.
+- Tests-first from here on: any new behaviour lands with its test in the same
+  commit, before the implementation. (Earlier commits interleaved tests and code;
+  history is not rewritten.)
+- Suggestions left as follow-ups: Dockerfile USER node, Secure cookie already
+  done, compile-error skip with migration 002 (Tùng's PR), tests-first going
+  forward.
+- Evidence: npm test 272 pass, 12 skipped; lint, format:check, typecheck clean.

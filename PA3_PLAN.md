@@ -119,11 +119,11 @@ Bạn chọn **PaaS có Docker (Render/Railway/Fly.io)**. Cần phân biệt:
 
 **Kết luận:** bắt buộc có **một máy Linux có Docker thật**. Vì nhóm chưa có VPS, dưới đây là các phương án **miễn phí**.
 
-#### Phương án đã chọn: **C — Render free (web) + Oracle worker**
+#### Phương án đã chọn: **C — Render free (web) + Azure worker**
 
 | # | Phương án | Vai trò | Trạng thái |
 |---|---|---|---|
-| **C** | **Render free + Oracle Cloud Always Free** | Render: web/API/UI. Oracle: worker + sandbox + Docker | ✅ **Đã chọn** |
+| **C** | **Render free + Azure for Students VM** | Render: web/API/UI. Azure: worker + sandbox + Docker | ✅ **Đã chọn** |
 | A | Oracle Cloud Always Free (1 VM) | Gộp web + worker + Postgres + Caddy | Fallback nếu Render hết 750 h hoặc ngủ khi chấm |
 | B | Google Cloud e2-micro (1 GB) | Worker + sandbox | Fallback nếu Oracle hết capacity |
 | D | AWS/Azure free 12 tháng | Worker | Fallback ngắn hạn |
@@ -191,7 +191,7 @@ Render Web Service (free)  ──────►  Neon Postgres (free, TLS)
 | Hard rules | `web-tree-sitter` (WASM) + grammar `tree-sitter-cpp` | AST thật, phân biệt comment/string/include; offline. Dùng bản WASM thay cho binding native `tree-sitter`: không cần node-gyp, chạy được trên Node 24, trong image checker `--network none` và trên Oracle ARM |
 | Model | **Google Gemini free tier** (`gemini-2.5-flash` hoặc `gemini-2.0-flash`) | Free tier, structured output (JSON schema), có `responseId` |
 | Checker | CLI Node + Dockerfile riêng | Chạy được `--network none`, `MODEL_OFF=1` |
-| Deploy | **Render free (web) + Oracle Cloud Always Free (worker) + Neon (DB)** | Public HTTPS, Docker thật, miễn phí |
+| Deploy | **Render free (web) + Azure for Students VM (worker) + Neon (DB)** | Public HTTPS, Docker thật, miễn phí |
 
 ### 3.3 Mô hình dữ liệu tối thiểu
 
@@ -612,7 +612,7 @@ Thêm **"never list"** vào `AGENTS.md` theo bảng "Catching your assistant" c�
 ## 8. Việc cần chốt ngay (blockers)
 
 1. ✅ **Dev set:** đã tải từ <https://github.com/fithcmus/awad-leetkob-eval>, hash đúng, đã copy vào repo làm việc `PA02/leetkob-eval/` + manifest `PA02/leetkob-eval.sha256`.
-2. ✅ **Kiến trúc:** chốt **Render free (web) + Oracle Cloud Always Free (worker) + Neon Postgres**. Cần đăng ký 3 tài khoản; Oracle cần thẻ xác minh — ai đứng tên và làm trong hôm nay.
+2. ✅ **Kiến trúc:** chốt **Render free (web) + Azure for Students VM (worker) + Neon Postgres**. Cần đăng ký 3 tài khoản; Azure for Students cần xác minh tài khoản trước khi tạo VM — ai đứng tên và làm trong hôm nay.
 3. ✅ **Gemini key:** Tùng tạo, spending cap = 0 USD (chỉ free tier), chỉ đặt trên Oracle worker.
 4. **FAQ product owners:** vẫn chưa có câu trả lời — xem giải thích ở mục 8.1.
 5. ✅ **Tên repo:** giữ `2026-AWAD-PA02`; làm trực tiếp trên repo này.

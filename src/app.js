@@ -12,6 +12,8 @@
 import { handleSubmission } from './domain/submissions.js';
 import { INTERNAL_DETAIL, sendProblem } from './http/problem.js';
 import { createMemoryRepo } from './repo/memory.js';
+import { createWebRoutes } from './web/routes.js';
+import { createWebStore } from './web/store.js';
 
 const SUBMISSIONS_ROUTE = /^\/v1\/labs\/([^/]+)\/submissions$/;
 
@@ -36,6 +38,7 @@ function sendJson(res, status, body) {
  *   repo?: ReturnType<typeof createMemoryRepo>,
  *   hooks?: import('./domain/submissions.js').Hooks,
  *   clock?: import('./domain/submissions.js').Clock,
+ *   webStore?: ReturnType<typeof createWebStore>,
  * }} [options]
  * @returns {{
  *   handler: import('node:http').RequestListener,
@@ -44,12 +47,15 @@ function sendJson(res, status, body) {
  *     failNextCreate: () => void,
  *     unenroll: (studentId: number, classId: number) => void,
  *     expireToken: (token: string) => void,
+ *     webStore: ReturnType<typeof createWebStore>,
  *   },
  * }}
  */
-export function createApp({ seed, repo, hooks = {}, clock } = {}) {
+export function createApp({ seed, repo, hooks = {}, clock, webStore } = {}) {
   const store = repo ?? createMemoryRepo({ seed });
   const serverClock = clock ?? { now: () => new Date() };
+  const pa3Store = webStore ?? createWebStore();
+  const web = createWebRoutes({ store: pa3Store, clock: serverClock });
 
   /**
    * @param {import('node:http').IncomingMessage} req
@@ -64,6 +70,10 @@ export function createApp({ seed, repo, hooks = {}, clock } = {}) {
       sendJson(res, 200, { status: 'ok' });
       return;
     }
+
+    // The PA#3 UI. It returns false for `/v1`, which stays on the PA#2
+    // contract below.
+    if (await web.handle(req, res)) return;
 
     // Step 1 — route and method, before authentication.
     const match = SUBMISSIONS_ROUTE.exec(pathname);
@@ -108,6 +118,7 @@ export function createApp({ seed, repo, hooks = {}, clock } = {}) {
       failNextCreate: () => store.failNextCreate(),
       unenroll: (studentId, classId) => store.unenroll(studentId, classId),
       expireToken: (token) => store.expireToken(token),
+      webStore: pa3Store,
     },
   };
 }

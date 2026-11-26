@@ -1,0 +1,165 @@
+#!/usr/bin/env bash
+# Bootstrap an Ubuntu 24.04 VM for the LeeTKOB PA#3 worker.
+#
+# Provider-agnostic: it works on Oracle Cloud Always Free, Azure (for Students),
+# Hetzner, a home VM or WSL2. Nothing here is Oracle-specific.
+#
+# Run as the default non-root user (`ubuntu` on Oracle, `azureuser` on Azure;
+# it uses sudo, never runs as root):
+#   curl -fsSLO https://raw.githubusercontent.com/tinphan247/2026-AWAD-PA02/feat/pa3-scaffold/deploy/oracle-setup.sh
+#   bash oracle-setup.sh
+#
+# Overrides:
+#   REPO_URL=... REPO_DIR=~/leetkob BRANCH=main SANDBOX_IMAGE=leetkob-sandbox:latest
+#
+# Idempotent: re-running upgrades nothing that is already installed and only
+# fetches the branch again. See docs/azure-vm.md (Azure) or docs/oracle-vm.md
+# (Oracle) for the click-by-click guide.
+
+set -euo pipefail
+
+REPO_URL="${REPO_URL:-https://github.com/tinphan247/2026-AWAD-PA02.git}"
+REPO_DIR="${REPO_DIR:-$HOME/leetkob}"
+BRANCH="${BRANCH:-main}"
+SANDBOX_IMAGE="${SANDBOX_IMAGE:-leetkob-sandbox:latest}"
+
+log() { printf '\n==> %s\n' "$*"; }
+warn() { printf 'warning: %s\n' "$*" >&2; }
+
+if [ "$(id -u)" -eq 0 ]; then
+  echo "Run this as a normal user (ubuntu, azureuser, ...), not root; it uses sudo." >&2
+  exit 1
+fi
+if ! command -v sudo >/dev/null 2>&1; then
+  echo "sudo is missing; this does not look like an Ubuntu cloud image." >&2
+  exit 1
+fi
+
+# ---------------------------------------------------------------- OS + swap
+log "Operating system"
+# shellcheck disable=SC1091
+. /etc/os-release
+printf '%s (%s)\n' "$PRETTY_NAME" "$(uname -m)"
+
+mem_mb=$(awk '/MemTotal/ {print int($2 / 1024)}' /proc/meminfo)
+log "Memory: ${mem_mb} MB"
+if [ "$mem_mb" -lt 2000 ] && [ ! -f /swapfile ]; then
+  log "Adding a 2 GB swap file (small shape)"
+  sudo fallocate -l 2G /swapfile
+  sudo chmod 600 /swapfile
+  sudo mkswap /swapfile >/dev/null
+  sudo swapon /swapfile
+  if ! grep -q '^/swapfile ' /etc/fstab; then
+    echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab >/dev/null
+  fi
+  sudo sysctl -q vm.swappiness=10
+fi
+
+# ------------------------------------------------------------ base packages
+log "Base packages"
+sudo apt-get update -y
+sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
+  ca-certificates curl git gnupg lsb-release
+
+# ------------------------------------------------------------------- Docker
+if command -v docker >/dev/null 2>&1; then
+  log "Docker already installed: $(docker --version)"
+else
+  log "Installing Docker from the official convenience script"
+  curl -fsSL https://get.docker.com -o /tmp/get-docker.sh
+  sh /tmp/get-docker.sh
+  rm -f /tmp/get-docker.sh
+fi
+sudo systemctl enable --now docker
+if ! id -nG "$USER" | tr ' ' '\n' | grep -qx docker; then
+  sudo usermod -aG docker "$USER"
+  NEEDS_RELOGIN=1
+fi
+
+# --------------------------------------------------------------------- Node
+node_major=0
+if command -v node >/dev/null 2>&1; then
+  node_major=$(node -p 'process.versions.node.split(".")[0]')
+fi
+if [ "$node_major" -lt 24 ]; then
+  log "Installing Node.js 24 LTS"
+  curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash -
+  sudo DEBIAN_FRONTEND=noninteractive apt-get install -y nodejs
+else
+  log "Node.js already installed: $(node --version)"
+fi
+node --version
+npm --version
+
+# ------------------------------------------------------------------- source
+log "Repository: $REPO_URL ($BRANCH)"
+if [ -d "$REPO_DIR/.git" ]; then
+  git -C "$REPO_DIR" fetch --prune origin
+  git -C "$REPO_DIR" checkout "$BRANCH"
+  git -C "$REPO_DIR" pull --ff-only
+else
+  git clone --branch "$BRANCH" "$REPO_URL" "$REPO_DIR"
+fi
+cd "$REPO_DIR"
+
+log "Runtime dependencies"
+npm ci --omit=dev
+
+log "Sandbox image: $SANDBOX_IMAGE"
+if [ -f sandbox/Dockerfile ]; then
+  sudo docker build -t "$SANDBOX_IMAGE" sandbox
+else
+  warn "sandbox/Dockerfile is missing: merge Tùng's sandbox branch, then re-run."
+fi
+
+# --------------------------------------------------------------- directories
+log "Directories"
+# /etc/leetkob is root-owned: the worker must not be able to rewrite its env.
+sudo install -d -m 0750 -o root -g root /etc/leetkob
+# The call log is the only path the worker writes.
+sudo install -d -m 0750 -o "$USER" -g "$USER" /var/log/leetkob
+
+# ------------------------------------------------------------------ systemd
+# The unit template hard-codes the Oracle defaults (User=ubuntu,
+# /home/ubuntu/leetkob). Rewrite those two fields for the current account so
+# the same file works on Azure (azureuser) or any other provider.
+log "systemd unit"
+unit_tmp=$(mktemp)
+sed -e "s|^User=ubuntu$|User=$USER|" \
+    -e "s|^Group=ubuntu$|Group=$USER|" \
+    -e "s|^WorkingDirectory=/home/ubuntu/leetkob$|WorkingDirectory=$REPO_DIR|" \
+    "$REPO_DIR/deploy/leetkob-worker.service" >"$unit_tmp"
+sudo install -m 0644 "$unit_tmp" /etc/systemd/system/leetkob-worker.service
+rm -f "$unit_tmp"
+sudo systemctl daemon-reload
+echo "installed /etc/systemd/system/leetkob-worker.service (User=$USER, WorkingDirectory=$REPO_DIR)"
+
+# ------------------------------------------------------------------- smoke
+log "Docker smoke test"
+sudo docker run --rm hello-world >/dev/null
+echo "docker run hello-world: ok"
+
+if sudo docker image inspect "$SANDBOX_IMAGE" >/dev/null 2>&1; then
+  log "Sandbox smoke test (empty stdin must be rejected)"
+  sudo docker run --rm --network=none "$SANDBOX_IMAGE" 1 3 1048576 10 </dev/null \
+    || true
+fi
+
+# ------------------------------------------------------------------ summary
+cat <<EOF
+
+Done.
+
+Next steps (see docs/azure-vm.md §5 or docs/oracle-vm.md §5):
+  1. sudo install -m 600 -o root -g root /dev/null /etc/leetkob/worker.env
+     sudo nano /etc/leetkob/worker.env        # template: deploy/worker.env.example
+  2. The systemd unit is already installed (step above); check it:
+       systemctl cat leetkob-worker | head -30
+  3. sudo systemctl enable --now leetkob-worker
+     sudo journalctl -u leetkob-worker -f
+
+EOF
+
+if [ "${NEEDS_RELOGIN:-0}" -eq 1 ]; then
+  echo "Log out and back in (or run 'newgrp docker') before using docker without sudo."
+fi

@@ -775,3 +775,24 @@
 - Not verified: no Azure VM created yet, so the script has not run on Azure.
 - Evidence: docs and script only; the four checks are unaffected.
 
+
+## 2026-11-26 — Tín — Claude (DeepSeek V4.1 Flash Free): review fixes before merge
+
+- Task: address Tùng's two blocking comments on PR feat/pa3-scaffold (c36328c):
+  anonymise identity in string literals, and repair the double-encoded doc files.
+- Result: src/judge/pipeline.js now collects the submitting student's name,
+  MSSV, e-mail and the e-mail local part and passes them to judgeConstraint,
+  which already feeds them to nonymizeCode; a name that survives in a string
+  literal becomes [REDACTED]. src/model/judge.js wraps callLog.record so
+  a recorder failure after a paid call cannot retry and re-bill the job.
+  worker/index.js prints error.message only. src/web/form.js adds the
+  Secure flag to the session cookie in production. PA3_PLAN.md and
+  README.md were restored from main and re-saved as UTF-8 without BOM, with
+  the Oracle-to-Azure edits applied on top.
+- Tests-first from here on: any new behaviour lands with its test in the same
+  commit, before the implementation. (Earlier commits interleaved tests and code;
+  history is not rewritten.)
+- Suggestions left as follow-ups: Dockerfile USER node, Secure cookie already
+  done, compile-error skip with migration 002 (Tùng's PR), tests-first going
+  forward.
+- Evidence: npm test 272 pass, 12 skipped; lint, format:check, typecheck clean.

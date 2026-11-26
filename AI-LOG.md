@@ -780,10 +780,16 @@
 
 - Task: address Tùng's two blocking comments on PR feat/pa3-scaffold (c36328c):
   anonymise identity in string literals, and repair the double-encoded doc files.
-- Result: src/judge/pipeline.js now collects the submitting student's name,
-  MSSV, e-mail and the e-mail local part and passes them to judgeConstraint,
-  which already feeds them to nonymizeCode; a name that survives in a string
-  literal becomes [REDACTED]. src/model/judge.js wraps callLog.record so
+- Result: src/judge/pipeline.js now collects whatever identity is
+  available for the submission (submission.identities, studentName, studentId
+  and the account's e-mail plus its local part looked up in users) and
+  passes them to judgeConstraint, which feeds them to nonymizeCode. The
+  users table has no name/MSSV column, so in production only the e-mail is
+  redacted by the pipeline; a name or MSSV that a student types into a string
+  literal is redacted only when the submission carries it. nonymizeCode
+  itself already supports arbitrary identities. A new test in
+  	est/unit/model-judge.test.js checks that an identity in a string literal
+  becomes [REDACTED] in the prompt sent to the model. src/model/judge.js wraps callLog.record so
   a recorder failure after a paid call cannot retry and re-bill the job.
   worker/index.js prints error.message only. src/web/form.js adds the
   Secure flag to the session cookie in production. PA3_PLAN.md and

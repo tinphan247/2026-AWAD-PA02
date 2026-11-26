@@ -49,6 +49,27 @@ test('a violation maps the evidence back to the original line', async () => {
   assert.equal(result.call.requestId, 'req-1');
 });
 
+test('the prompt sent to the model never contains an identity that survives in a string literal', async () => {
+  let capturedUser = '';
+  const result = await judgeConstraint({
+    submissionId: 1,
+    statement: 'Sort the array.',
+    constraint: CONSTRAINT,
+    sourceCode: 'int main() { cout << "Alice 23120372"; }\\n',
+    identities: ['Alice', '23120372'],
+    apiKey: 'test-key',
+    model: 'gemini-2.5-flash',
+    callModel: async ({ user }) => {
+      capturedUser = user;
+      return reply({ verdict: 'pass', evidence: [], reason: 'ok' });
+    },
+  });
+
+  assert.equal(result.verdict, 'pass');
+  assert.ok(!capturedUser.includes('Alice'));
+  assert.ok(!capturedUser.includes('23120372'));
+  assert.ok(capturedUser.includes('[REDACTED]'));
+});
 test('a pass drops any evidence the model returned', async () => {
   const result = await judgeConstraint({
     submissionId: 1,

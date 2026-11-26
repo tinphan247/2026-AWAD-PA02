@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
-# Bootstrap an Oracle Cloud Always Free VM for the LeeTKOB PA#3 worker.
+# Bootstrap an Ubuntu 24.04 VM for the LeeTKOB PA#3 worker.
 #
-# Run as the default `ubuntu` user (it uses sudo, never runs as root):
+# Provider-agnostic: it works on Oracle Cloud Always Free, Azure (for Students),
+# Hetzner, a home VM or WSL2. Nothing here is Oracle-specific.
+#
+# Run as the default non-root user (`ubuntu` on Oracle, `azureuser` on Azure;
+# it uses sudo, never runs as root):
 #   curl -fsSLO https://raw.githubusercontent.com/tinphan247/2026-AWAD-PA02/feat/pa3-scaffold/deploy/oracle-setup.sh
 #   bash oracle-setup.sh
 #
@@ -9,7 +13,8 @@
 #   REPO_URL=... REPO_DIR=~/leetkob BRANCH=main SANDBOX_IMAGE=leetkob-sandbox:latest
 #
 # Idempotent: re-running upgrades nothing that is already installed and only
-# fetches the branch again. See docs/oracle-vm.md for the click-by-click guide.
+# fetches the branch again. See docs/azure-vm.md (Azure) or docs/oracle-vm.md
+# (Oracle) for the click-by-click guide.
 
 set -euo pipefail
 
@@ -22,11 +27,11 @@ log() { printf '\n==> %s\n' "$*"; }
 warn() { printf 'warning: %s\n' "$*" >&2; }
 
 if [ "$(id -u)" -eq 0 ]; then
-  echo "Run this as the 'ubuntu' user, not root; it calls sudo where needed." >&2
+  echo "Run this as a normal user (ubuntu, azureuser, ...), not root; it uses sudo." >&2
   exit 1
 fi
 if ! command -v sudo >/dev/null 2>&1; then
-  echo "sudo is missing; this does not look like the Oracle Ubuntu image." >&2
+  echo "sudo is missing; this does not look like an Ubuntu cloud image." >&2
   exit 1
 fi
 
@@ -114,6 +119,21 @@ sudo install -d -m 0750 -o root -g root /etc/leetkob
 # The call log is the only path the worker writes.
 sudo install -d -m 0750 -o "$USER" -g "$USER" /var/log/leetkob
 
+# ------------------------------------------------------------------ systemd
+# The unit template hard-codes the Oracle defaults (User=ubuntu,
+# /home/ubuntu/leetkob). Rewrite those two fields for the current account so
+# the same file works on Azure (azureuser) or any other provider.
+log "systemd unit"
+unit_tmp=$(mktemp)
+sed -e "s|^User=ubuntu$|User=$USER|" \
+    -e "s|^Group=ubuntu$|Group=$USER|" \
+    -e "s|^WorkingDirectory=/home/ubuntu/leetkob$|WorkingDirectory=$REPO_DIR|" \
+    "$REPO_DIR/deploy/leetkob-worker.service" >"$unit_tmp"
+sudo install -m 0644 "$unit_tmp" /etc/systemd/system/leetkob-worker.service
+rm -f "$unit_tmp"
+sudo systemctl daemon-reload
+echo "installed /etc/systemd/system/leetkob-worker.service (User=$USER, WorkingDirectory=$REPO_DIR)"
+
 # ------------------------------------------------------------------- smoke
 log "Docker smoke test"
 sudo docker run --rm hello-world >/dev/null
@@ -130,14 +150,12 @@ cat <<EOF
 
 Done.
 
-Next steps (see docs/oracle-vm.md §5):
+Next steps (see docs/azure-vm.md §5 or docs/oracle-vm.md §5):
   1. sudo install -m 600 -o root -g root /dev/null /etc/leetkob/worker.env
      sudo nano /etc/leetkob/worker.env        # template: deploy/worker.env.example
-  2. sudo cp "$REPO_DIR/deploy/leetkob-worker.service" /etc/systemd/system/
-     sudo systemctl daemon-reload
-  3. Check that the worker is implemented before enabling it:
-       grep -n "not implemented" "$REPO_DIR/src/queue/worker.js"
-  4. sudo systemctl enable --now leetkob-worker
+  2. The systemd unit is already installed (step above); check it:
+       systemctl cat leetkob-worker | head -30
+  3. sudo systemctl enable --now leetkob-worker
      sudo journalctl -u leetkob-worker -f
 
 EOF

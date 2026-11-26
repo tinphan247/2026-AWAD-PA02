@@ -1,6 +1,6 @@
-# LeeTKOB — PA#2 harness and PA#3 prototype
+﻿# LeeTKOB â€” PA#2 harness and PA#3 prototype
 
-PA#2 checkpoint for **CSC13114 — Advanced Web Application Development**.
+PA#2 checkpoint for **CSC13114 â€” Advanced Web Application Development**.
 This repository is the ground the LeeTKOB product stands on before the LLM
 feature arrives in PA#3. PA#3 adds that feature on the same repository.
 
@@ -39,7 +39,7 @@ tracks what is still TODO.
 - **Call log** (`src/model/calllog.js`): request id, tokens, latency,
   list-price cost and the anonymised prompt.
 
-Architecture: Render (web) + Oracle Cloud Always Free (worker and Docker
+Architecture: Render (web) + a cloud VM (worker and Docker
 sandbox) + Neon (Postgres) + Gemini free tier. See
 [`docs/deploy.md`](docs/deploy.md).
 
@@ -167,7 +167,7 @@ Only `HOST` and `PORT` are currently read by the web process; `.env.example`
 lists the rest without values. The application does not load a `.env` file
 itself.
 
-In PA#3 the model API key is read only on the Oracle worker. It is never set on
+In PA#3 the model API key is read only on the worker VM. It is never set on
 Render and never passed into the sandbox. The UI and the worker share the
 database, not the key.
 

@@ -4,7 +4,7 @@ import { createCallRecorder } from '../src/judge/recorder.js';
 import { runWorker } from '../src/queue/worker.js';
 import { createPostgresDb } from '../src/repo/postgres.js';
 
-// The worker runs on its own machine (the Oracle VM), apart from the web app.
+// The worker runs on its own machine (the worker VM), apart from the web app.
 // It holds the model key; the sandbox it starts never receives it.
 const databaseUrl = process.env.DATABASE_URL ?? '';
 if (databaseUrl === '') {

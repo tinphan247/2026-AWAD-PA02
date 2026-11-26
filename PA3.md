@@ -12,20 +12,22 @@ Repo: <https://github.com/tinphan247/2026-AWAD-PA02>
 | Thành phần | Dịch vụ | Trạng thái |
 |---|---|---|
 | Web/API | Render Web Service (free) | đã có tài khoản, **TODO URL** |
-| Worker + sandbox | Oracle Cloud Always Free VM | **TODO** (đăng ký + VM) |
+| Worker + sandbox | Azure for Students VM (Ubuntu 24.04) | **TODO** (tạo VM) |
 | Postgres | Neon (free) | đã có project, **TODO connection string** |
 | Model | Google Gemini free tier (`gemini-2.5-flash`) | **TODO** key (Tùng) |
 
 - Health check: `GET /healthz` → `{"status":"ok"}`. Render dùng path này.
 - Cron-job.org gọi `/healthz` mỗi 10 phút để Render free không ngủ.
-- `GEMINI_API_KEY` chỉ đặt trên worker Oracle; **không** đặt trên Render và
+- `GEMINI_API_KEY` chỉ đặt trên worker VM; **không** đặt trên Render và
   **không** truyền vào sandbox.
 - Worker: `worker/index.js` → `src/judge/pipeline.js` chạy sandbox → hard rules
   (ban list, không gọi model) → model (mỗi constraint một call), rồi ghi
   `verdicts` và `model_calls`. Không có key thì semantic thành `unsure`.
 - Hướng dẫn từng bước: [`docs/deploy.md`](docs/deploy.md).
-- Runbook Oracle (đăng ký, thẻ, SSH, firewall, systemd):
-  [`docs/oracle-vm.md`](docs/oracle-vm.md); script cài: `deploy/oracle-setup.sh`.
+- Runbook VM hiện tại (Azure: tạo VM, NSG, SSH, systemd):
+  [`docs/azure-vm.md`](docs/azure-vm.md); script cài: `deploy/oracle-setup.sh`
+  (không phụ thuộc provider). Runbook Oracle Always Free (phương án dự phòng,
+  A1 hết capacity nên chưa dùng được): [`docs/oracle-vm.md`](docs/oracle-vm.md).
 
 ## 2. Tài khoản test
 

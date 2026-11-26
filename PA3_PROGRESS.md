@@ -25,13 +25,13 @@ khi chưa có test/commit.
 | Review queue FAQ-10 + tab tất cả verdict | xong | `src/domain/review.js` |
 | Cách ly lớp 403 | xong | `test/web/flow.test.js` |
 | `PA3.md`, README, kịch bản video | xong | `PA3.md`, `README.md`, `docs/video-script.md` |
-| Runbook Oracle + script cài + systemd unit | xong | `docs/oracle-vm.md`, `deploy/oracle-setup.sh` |
+| Runbook VM + script cài + systemd unit | xong | `docs/azure-vm.md`, `docs/oracle-vm.md`, `deploy/oracle-setup.sh` |
 | Merge `main` vào nhánh, resolve 2 conflict | xong | `554d7bf`, `npm test` 270 test |
 | **Tích hợp worker** (sandbox → hard rules → model) | xong | `src/judge/pipeline.js`, `worker/index.js`, `test/judge/pipeline.test.js` |
-| **Oracle VM** | **chờ bấm** | AD-1 hết capacity A1/Micro; runbook sẵn |
+| **Azure VM** (thay Oracle) | **chờ tạo VM** | Oracle AD-1 hết capacity A1; đã đăng nhập Azure for Students, runbook sẵn |
 | Env Render/Neon + cron ping | chờ VM | `docs/deploy.md`, `scripts/keepalive.mjs` |
 | Gọi Gemini thật | **blocked** | chờ key của Tùng |
-| Cầu web ↔ Postgres (submission → job) | **chưa ai làm** | web đang in-memory, `enqueueJob` không có caller |
+| Cầu web ↔ Postgres (submission → job) | xong, chờ commit | `src/web/postgres-store.js`, `test/web/postgres-store.test.js` |
 | Video, tag `pa3`, zip | chưa | hạn 25/11 |
 
 ## Tùng (C2, C5, schema, secrets)
@@ -61,7 +61,7 @@ khi chưa có test/commit.
 
 | Blocker | Ai gỡ | Ảnh hưởng |
 |---|---|---|
-| Oracle Cloud VM | Tín | deploy worker + sandbox trên deployment |
+| Oracle/Azure VM | Tín | Oracle hết capacity A1 → tạo VM trên Azure for Students |
 | Gemini key | Tùng → Tín | chưa có call thật (C4), chưa có `runs/pa3-dev/` |
 | Cầu web ↔ Postgres | Tùng/Tín | web không tạo job nên worker không chấm bài trên deployment |
 | PR `feat/pa3-scaffold` | Tín mở, Tùng/Tuệ approve | `main` chưa có PA#3 |

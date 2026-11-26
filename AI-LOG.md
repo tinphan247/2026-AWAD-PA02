@@ -731,3 +731,47 @@
 - Evidence: `npm test` 277 tests (265 pass, 12 Docker-only skipped), `npm run
   lint`, `npm run format:check`, `npm run typecheck`; merge commit `554d7bf`.
 
+## 2026-11-26 — Tín — Claude (DeepSeek V4.1 Flash Free): Postgres-backed web store
+
+- Task: the web UI wrote labs, submissions and verdicts to an in-memory store,
+  so nothing reached `submissions`/`jobs` and the deployed worker had nothing to
+  claim. Wire the UI to the same Postgres schema the worker uses.
+- Result: new `src/web/postgres-store.js` implements the existing web store
+  interface on `db.query`/`db.transaction`. It seeds the demo classes and users
+  idempotently (tokens still come from `defaultSeed()`, so no migration and no
+  schema change), and it creates a submission, flips `is_counted` on the
+  previous one and calls `enqueueJob` in one transaction, so exactly one counted
+  submission per student/lab becomes a job. `addVerdict` upserts on
+  (submission, constraint); `decideVerdict` keeps the model evidence on a TA
+  `pass` and replaces it on `violation`. `src/main.js` builds the store and runs
+  `migrate(db)` at boot when `DATABASE_URL` is set; `src/server.js` passes it
+  into `createApp`.
+- Changed: the `src/web/store.js` typedef accepts `status: 'error'`, which the
+  worker already writes.
+- Rejected: a migration for demo accounts. `defaultSeed()` already has the
+  tokens; the store maps token to `<name>@demo.leetkob` and creates the class
+  membership on first boot.
+- Not verified: no real Neon or Docker run; the new tests use pglite and drive
+  `processNextJob` with a fake sandbox and a fake model.
+- Evidence: `test/web/postgres-store.test.js` (7 tests), `npm run lint`,
+  `npm run typecheck`.
+
+## 2026-11-26 — Tín — Claude (DeepSeek V4.1 Flash Free): Azure runbook after Oracle capacity
+
+- Task: Oracle Always Free refused A1 capacity in AD-1 and Tín can sign in to
+  Azure for Students. Add a runbook for the same worker + sandbox on Azure
+  without forking the bootstrap script.
+- Result: new `docs/azure-vm.md` (portal fields, B1ms/B2s, NSG open only for
+  SSH from one IP, script, env, systemd, cost, cleanup).
+  `deploy/oracle-setup.sh` is now documented as provider-agnostic and installs
+  `/etc/systemd/system/leetkob-worker.service` with `User=$USER` and
+  `WorkingDirectory=$REPO_DIR`, because the unit template hard-codes the Oracle
+  `ubuntu` account and would silently fail on Azure's `azureuser`.
+  `docs/deploy.md`, `PA3.md` §1, `PA3_PROGRESS.md` and
+  `deploy/worker.env.example` point at Azure and keep Oracle as the fallback.
+- Rejected: renaming the script to `vm-setup.sh`. Docs, CI and earlier log
+  entries already reference the old path, and the script has nothing
+  Oracle-specific.
+- Not verified: no Azure VM created yet, so the script has not run on Azure.
+- Evidence: docs and script only; the four checks are unaffected.
+

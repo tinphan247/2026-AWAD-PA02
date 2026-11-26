@@ -1,9 +1,13 @@
-# PA#3 deployment — Render free + Oracle worker + Neon
+# PA#3 deployment — Render free + cloud VM worker + Neon
 
 Chosen architecture (see `PA3_PLAN.md` §3.1): the web/API runs on Render's free
-tier, the worker and the Docker sandbox run on an Oracle Cloud Always Free VM,
-and Postgres lives on Neon's free tier. The Gemini key exists only on the
-Oracle worker.
+tier, the worker and the Docker sandbox run on a small Ubuntu VM, and Postgres
+lives on Neon's free tier. The Gemini key exists only on that worker VM.
+
+Oracle Cloud Always Free was the first choice, but A1 capacity was unavailable,
+so the VM runs on **Azure for Students**. The bootstrap script is
+provider-agnostic: [`docs/azure-vm.md`](azure-vm.md) is the current runbook,
+[`docs/oracle-vm.md`](oracle-vm.md) is kept for the Always Free fallback.
 
 ## 1. Neon (database)
 
@@ -27,37 +31,42 @@ Oracle worker.
    that GETs `https://<app>.onrender.com/healthz` every 10 minutes
    (24/7 ≈ 730 h/month, just under the 750 h limit).
 
-## 3. Oracle Cloud Always Free (worker + sandbox)
+## 3. Cloud VM (worker + sandbox)
 
-Step-by-step runbook, including signup, card verification, SSH keys, firewall
-and systemd: [`docs/oracle-vm.md`](oracle-vm.md). The bootstrap script is
-[`deploy/oracle-setup.sh`](../deploy/oracle-setup.sh).
+**Current: Azure for Students.** Step-by-step runbook:
+[`docs/azure-vm.md`](azure-vm.md). The bootstrap script is
+[`deploy/oracle-setup.sh`](../deploy/oracle-setup.sh) (provider-agnostic despite
+the name: it installs Docker and Node 24, clones the repo, builds
+`leetkob-sandbox:latest`, prepares `/etc/leetkob` and `/var/log/leetkob`, and
+installs the systemd unit with the right `User=`/`WorkingDirectory=`).
 
-1. Sign up at https://www.oracle.com/cloud/free/ (card required for
-   verification, no charge on Always Free). Tín owns this account.
-2. Create a VM: "Always Free" Ampere A1 (4 OCPU / 24 GB) or, if capacity is
-   gone, an AMD micro (1 GB, add 2 GB swap).
-3. Open only SSH (22) in the security list, restricted to your own IP; the
-   worker needs **outbound** only.
-4. Run `deploy/oracle-setup.sh`: it installs Docker and Node 24, clones the
-   repo, builds `leetkob-sandbox:latest` and prepares `/etc/leetkob` and
-   `/var/log/leetkob`.
-5. Set env in `/etc/leetkob/worker.env` (mode 600): `DATABASE_URL`,
-   `GEMINI_API_KEY` (from Tùng), `MODEL_NAME`, `MODEL_SPEND_CAP_USD`,
-   `MODEL_TIMEOUT_MS`, `MODEL_CALL_LOG`, `WORKER_ID`, `POLL_INTERVAL_MS`,
-   `SANDBOX_IMAGE`. Template: `deploy/worker.env.example`.
-6. Install `deploy/leetkob-worker.service` and enable it **after** the queue
-   branch is merged. The worker runs on the host, not in a container, because
-   `src/sandbox/run.js` starts sandbox containers with the Docker CLI. Do not
-   use `docker compose up worker`: compose would also start a local Postgres,
-   and a worker container would need the Docker socket.
-7. Budget alert at 0 USD; do not upgrade to Pay As You Go.
+1. Create a VM: Ubuntu 24.04, size ≥ 2 GB RAM (`Standard_B1ms` or `B2s`),
+   region near Neon, SSH public key, no extra inbound ports.
+2. Open only SSH (22) in the NSG, restricted to your own IP; the worker needs
+   **outbound** only.
+3. `BRANCH=feat/pa3-scaffold bash deploy/oracle-setup.sh` on the VM.
+4. Set env in `/etc/leetkob/worker.env` (mode 600): `DATABASE_URL`,
+   `GEMINI_API_KEY` (from Tùng), `MODEL_NAME`, `MODEL_TIMEOUT_MS`,
+   `MODEL_CALL_LOG`, `WORKER_ID`, `POLL_INTERVAL_MS`, `SANDBOX_IMAGE`.
+   Template: `deploy/worker.env.example`. The per-lab budget is
+   `labs.cost_cap_usd` in Postgres, not an env var.
+5. `sudo systemctl enable --now leetkob-worker`. The worker runs on the host,
+   not in a container, because `src/sandbox/run.js` starts sandbox containers
+   with the Docker CLI. Do not use `docker compose up worker`: compose would
+   also start a local Postgres, and a worker container would need the Docker
+   socket.
+6. Budget/cost alert; stop the VM when marking is finished.
+
+Oracle Cloud Always Free remains a valid fallback: the same script and unit
+work there, and [`docs/oracle-vm.md`](oracle-vm.md) covers signup, card
+verification and firewall. Do not upgrade Oracle to Pay As You Go.
 
 ## 4. Cron ping
 
 - cron-job.org: GET `https://<app>.onrender.com/healthz` every 10 minutes.
-- Optional: a second job that runs a tiny CPU task on the Oracle VM every few
-  hours so Oracle does not reclaim it as idle.
+- Optional: a second job that runs a tiny CPU task on the worker VM every few
+  hours so an Always Free instance is not reclaimed as idle (Azure does not
+  reclaim; this only matters on Oracle).
 
 ## 5. Accounts and test data
 
@@ -70,7 +79,7 @@ and systemd: [`docs/oracle-vm.md`](oracle-vm.md). The bootstrap script is
 ## 6. Verification
 
 - `curl https://<app>.onrender.com/healthz` returns 200.
-- `docker run hello-world` works on the Oracle VM.
+- `docker run hello-world` works on the worker VM.
 - Worker connects to Neon and claims a job.
 - Submitting a solution on Render results in a judged submission and a row in
   the review queue.
@@ -78,7 +87,7 @@ and systemd: [`docs/oracle-vm.md`](oracle-vm.md). The bootstrap script is
 ## Fallback
 
 If Render runs out of the 750 free hours or sleeps during marking, move the web
-service onto the Oracle VM: run `web` + `caddy` in the same `docker-compose.yml`,
+service onto the worker VM: run `web` + `caddy` in the same `docker-compose.yml`,
 point `DATABASE_URL` at Neon, and update `PA3.md` with the new URL. No code
 changes are needed.
 

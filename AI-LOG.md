@@ -802,3 +802,46 @@
   done, compile-error skip with migration 002 (Tùng's PR), tests-first going
   forward.
 - Evidence: npm test 272 pass, 12 skipped; lint, format:check, typecheck clean.
+
+## 2026-11-27 — Tùng — Claude (Claude Sonnet 5.5): skip the model on compile errors
+
+- Task: stop paying for a model call when a submission does not compile, as a
+  small PR on top of main after PR #18 merged.
+- Decision (cost): when the sandbox reports `CE`, the pipeline does not call
+  the model. A semantic constraint is stored as `unsure` with reason
+  `compile_error`, decided by `fallback`, with no evidence, so a TA settles it
+  in the review queue. Ban-list constraints still run through the hard rules
+  because they cost nothing. The model never decides a mark here. The rule
+  exists because broken code is the likeliest input to waste money on and the
+  model's answer on code that does not build is not trustworthy anyway.
+- Decision (no `MODEL_SPEND_CAP_USD` check): an earlier local draft added a
+  global spend cap read from the environment and a start-up check. It was
+  dropped. Main already enforces a cap per lab (`labs.cost_cap_usd`, summed
+  from `model_calls`), so a second, global cap would duplicate it and could
+  disagree with it. The per-lab cost-cap logic is unchanged.
+- Changed: `src/judge/pipeline.js` (the `CE` branch, and `compile_error` added
+  to the reasons stored as-is, otherwise the pipeline would have rewritten it
+  to `model_unsure`), `src/model/schema.js` (`UNSURE_REASONS`),
+  `db/migrations/002_compile_error_reason.sql` (drops and recreates
+  `verdicts_unsure_reason_check`; `001_init.sql` is untouched), and the two
+  reason lists in `PA3_PLAN.md`.
+- Tests: written first and committed red. Two pipeline tests (a fake model
+  that counts calls stays at zero on `CE` and the pair is `unsure`/
+  `compile_error`; a ban list is still decided by the hard rules on `CE`) and
+  `test/repo/migration-002.test.js` on pglite (accepts `compile_error`, keeps
+  the old reasons, still rejects an unknown one).
+- Changed test (exactly-once): the expected migration list in
+  `test/queue/exactly-once.test.js` now has `002_compile_error_reason.sql`.
+  The test checks that migrations apply once and are recorded, so the list
+  must grow with every migration. The assertion itself is as strict as before;
+  no test was deleted or weakened.
+- Rejected / corrected: my first red tests used `compile: 'failed'`, which is
+  not a `SandboxResult` value (`'error'` is), so `typecheck` failed. I fixed
+  the value in the code commit; the assertions did not change. The first draft
+  of this work was also written against the tree before #18 and was thrown away
+  in favour of a fresh branch from main.
+- Not verified: migration 002 has not been run on Neon. Until it is, a worker
+  that stores a `compile_error` verdict would fail the insert. Run
+  `node db/migrate.mjs` against Neon after merge and before enabling the worker.
+- Evidence: lint, format:check and typecheck clean; `npm test` 291 tests, 279
+  pass, 0 fail, 12 skipped (Docker).

@@ -95,6 +95,19 @@ npm run dev
 The server listens on `127.0.0.1:3000` by default. Override with `PORT` /
 `HOST`.
 
+## Model and cost (PA#3)
+
+- Model: `gemini-3.1-flash-lite` (Google AI Studio, free tier, spending cap
+  USD 0) for the committed dev run in [`runs/pa3-dev/`](runs/pa3-dev/). The
+  model of the deployed worker is set by `MODEL_NAME` on the VM and recorded in
+  [`PA3.md`](PA3.md).
+- Measured: 36 replies, 23,581 tokens in and 4,129 out, USD 0.0174 at the
+  `gemini-2.5-flash` fallback price (the lite model has no entry in
+  `src/model/cost.js`, so this over-states its price). The free tier was not
+  billed.
+- One lab of 80 submissions with one semantic constraint each:
+  `80 x 0.000483 USD = about 0.039 USD`.
+
 ## Project layout
 
 ```text

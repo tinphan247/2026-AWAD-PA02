@@ -845,3 +845,37 @@
   `node db/migrate.mjs` against Neon after merge and before enabling the worker.
 - Evidence: lint, format:check and typecheck clean; `npm test` 291 tests, 279
   pass, 0 fail, 12 skipped (Docker).
+
+## 2026-11-27 — Tùng — Claude (Claude Sonnet 5.5): first real-model dev run, checker rate limit, PA#3 documents
+
+- Task: get one real-model dev run committed (criteria 4 and 6), keep the
+  checker usable on a free tier, and fill in `PA3.md` and the PA#3
+  self-assessment.
+- Decision (model): `gemini-2.5-flash`, chosen in PA#2, could not be used.
+  Keys from a new Google project get 404 for it (closed to new users) and the
+  older project's daily quota (20 requests) was used up. The run used
+  `gemini-3.1-flash-lite` on a new project's free-tier key. The cost is still
+  priced with the `gemini-2.5-flash` fallback in `src/model/cost.js`, which
+  over-states it; this is written in `runs/pa3-dev/README.md`.
+- Changed (PR #22): the checker paces its model calls and retries only HTTP 429
+  (`MODEL_MIN_INTERVAL_MS`, `MODEL_MAX_RETRIES`, `MODEL_RETRY_DELAY_MS`). Tests
+  were committed first with a fake model and a fake clock; no test was loosened.
+- Rejected: using the Gemini CLI as the model client to get around the daily
+  quota. The PA#3 rubric wants provider request ids in the call log and calls
+  a run without them a mocked one, and we did not verify that the CLI returns them. The brief
+  does allow any provider and free tiers, so the rule is the call log, not the
+  provider.
+- Rejected: changing the dev set, the labels, the thresholds or the prompts to
+  get a passing run. The run is committed as it came: FAIL, 3 wrongful
+  deductions, recall 64.9%, unsure 17.6%. PA#3 has no pass mark.
+- Found while reading the run: `calls.jsonl` has 36 lines for 47 model calls,
+  because a failed or timed-out call is not logged. The 11 missing pairs are
+  `unsure`; the decision log gives no reason per pair, so `runs/pa3-dev/README.md`
+  says that part is inferred from the counts.
+- Found: the temporary file that held the old key on the VM was still there
+  after the run; it was removed (`shred`). Several keys were pasted into chat
+  while testing quotas and must be revoked after the submission.
+- Not verified: the walk-through of the three demo submissions on the deployed
+  build after the last merges, and that migration `002_compile_error_reason.sql`
+  has been run on Neon.
+- Evidence: PR #22, PR #23, `runs/pa3-dev/`.

@@ -61,6 +61,11 @@ if (modelWanted) {
     apiKey,
     model,
     timeoutMs: Number(process.env.MODEL_TIMEOUT_MS ?? 20_000),
+    // The free tier allows about ten requests a minute: pace the calls and
+    // retry a 429 (MODEL_MIN_INTERVAL_MS=0 / MODEL_MAX_RETRIES=0 turn it off).
+    minIntervalMs: Number(process.env.MODEL_MIN_INTERVAL_MS ?? 7000),
+    maxRetries: Number(process.env.MODEL_MAX_RETRIES ?? 3),
+    retryDelayMs: Number(process.env.MODEL_RETRY_DELAY_MS ?? 20_000),
     callLog: createCallLog({ filePath: callsPath }),
   });
 }

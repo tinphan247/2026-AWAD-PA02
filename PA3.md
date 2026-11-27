@@ -55,10 +55,12 @@ vì chỉ bài nộp cuối của mỗi sinh viên được tính (FAQ-02).
   [#18 scaffold, model, UI, worker](https://github.com/tinphan247/2026-AWAD-PA02/pull/18),
   [#19 bỏ qua model khi lỗi biên dịch](https://github.com/tinphan247/2026-AWAD-PA02/pull/19),
   [#20 nối model vào checker](https://github.com/tinphan247/2026-AWAD-PA02/pull/20),
-  [#21 file demo](https://github.com/tinphan247/2026-AWAD-PA02/pull/21).
-  Đang chờ merge: [#22 pacing/retry 429](https://github.com/tinphan247/2026-AWAD-PA02/pull/22),
-  [#23 dev run](https://github.com/tinphan247/2026-AWAD-PA02/pull/23).
-- Tag `pa3`: **TODO** link CI run trên tag, gồm job `sandbox` (9 attack). Điền sau khi gắn tag.
+  [#21 file demo](https://github.com/tinphan247/2026-AWAD-PA02/pull/21),
+  [#22 pacing/retry 429](https://github.com/tinphan247/2026-AWAD-PA02/pull/22),
+  [#23 dev run](https://github.com/tinphan247/2026-AWAD-PA02/pull/23),
+  [#24 tài liệu PA#3](https://github.com/tinphan247/2026-AWAD-PA02/pull/24).
+- Tag `pa3`: [CI run #46001759926](https://github.com/tinphan247/2026-AWAD-PA02/actions/runs/46001759926)
+  (xanh cả `ci` và `sandbox` với 9 attack).
 - `npm test`: unit test offline, không cần Docker/Neon/mạng.
 - `npm run test:sandbox`: 9 attack + compile trong Docker (Tùng).
 

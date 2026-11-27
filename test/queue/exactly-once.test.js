@@ -227,7 +227,7 @@ test('queue: migrations apply once and are recorded', async () => {
   const { rows } = await db.query('SELECT name FROM schema_migrations ORDER BY name');
   assert.deepEqual(
     rows.map((row) => row.name),
-    ['001_init.sql'],
+    ['001_init.sql', '002_compile_error_reason.sql'],
   );
   await db.close();
 });

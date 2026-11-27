@@ -11,10 +11,10 @@ Repo: <https://github.com/tinphan247/2026-AWAD-PA02>
 
 | Thành phần | Dịch vụ | Trạng thái |
 |---|---|---|
-| Web/API | Render Web Service (free) | đã có tài khoản, **TODO URL** |
-| Worker + sandbox | Azure for Students VM (Ubuntu 24.04) | **TODO** (tạo VM) |
-| Postgres | Neon (free) | đã có project, **TODO connection string** |
-| Model | Google Gemini free tier (`gemini-2.5-flash`) | **TODO** key (Tùng) |
+| Web/API | Render Web Service (free) | <https://two026-awad-pa02.onrender.com/> |
+| Worker + sandbox | Azure for Students VM `leetkob-worker` (Ubuntu 24.04, Japan East) | chạy, service systemd |
+| Postgres | Neon (free, Singapore) | chạy; connection string chỉ ở biến môi trường, không trong repo |
+| Model | Google Gemini free tier. Dev run: `gemini-3.1-flash-lite`. Worker trên deployment cũng dùng `gemini-3.1-flash-lite`, `MODEL_TIMEOUT_MS=30000` | key chỉ trên VM |
 
 - Health check: `GET /healthz` → `{"status":"ok"}`. Render dùng path này.
 - Cron-job.org gọi `/healthz` mỗi 10 phút để Render free không ngủ.
@@ -48,8 +48,17 @@ vì chỉ bài nộp cuối của mỗi sinh viên được tính (FAQ-02).
 
 ## 3. CI và tag
 
-- PR: **TODO** link PR đã merge.
-- Tag `pa3`: **TODO** link CI run trên tag, gồm job `sandbox` (9 attack).
+- PR đã merge: [#14 queue](https://github.com/tinphan247/2026-AWAD-PA02/pull/14),
+  [#15 sandbox](https://github.com/tinphan247/2026-AWAD-PA02/pull/15),
+  [#16 hard rules](https://github.com/tinphan247/2026-AWAD-PA02/pull/16),
+  [#17 checker](https://github.com/tinphan247/2026-AWAD-PA02/pull/17),
+  [#18 scaffold, model, UI, worker](https://github.com/tinphan247/2026-AWAD-PA02/pull/18),
+  [#19 bỏ qua model khi lỗi biên dịch](https://github.com/tinphan247/2026-AWAD-PA02/pull/19),
+  [#20 nối model vào checker](https://github.com/tinphan247/2026-AWAD-PA02/pull/20),
+  [#21 file demo](https://github.com/tinphan247/2026-AWAD-PA02/pull/21).
+  Đang chờ merge: [#22 pacing/retry 429](https://github.com/tinphan247/2026-AWAD-PA02/pull/22),
+  [#23 dev run](https://github.com/tinphan247/2026-AWAD-PA02/pull/23).
+- Tag `pa3`: **TODO** link CI run trên tag, gồm job `sandbox` (9 attack). Điền sau khi gắn tag.
 - `npm test`: unit test offline, không cần Docker/Neon/mạng.
 - `npm run test:sandbox`: 9 attack + compile trong Docker (Tùng).
 
@@ -69,6 +78,11 @@ node leetkob-eval/eval.mjs --data leetkob-eval \
   --predictions runs/pa3-dev/predictions.jsonl
 ```
 
+Chạy với model thật (dev run): đặt `MODEL_NAME`, key (`GEMINI_API_KEY`) và
+tuỳ chọn `MODEL_MIN_INTERVAL_MS`, `MODEL_MAX_RETRIES`, `MODEL_RETRY_DELAY_MS`
+(PR #22) trong môi trường, rồi `node bin/check.mjs --dataset leetkob-eval --out
+runs/pa3-dev/predictions.jsonl`. Key không nằm trong repo.
+
 - `MODEL_OFF=1` không mở kết nối mạng; mọi constraint semantic thành `unsure`.
 - `eval.mjs` trả `0` (đạt) hoặc `1` (không đạt), **không bao giờ** `2`.
 - Dev set giữ nguyên byte-for-byte; hash trong `leetkob-eval.sha256`
@@ -76,8 +90,23 @@ node leetkob-eval/eval.mjs --data leetkob-eval \
 
 ## 5. Dev run
 
-**TODO** (Tuệ): `runs/pa3-dev/` gồm `predictions.jsonl`, báo cáo `eval.mjs`,
-và call log.
+Thư mục [`runs/pa3-dev/`](runs/pa3-dev/) (PR #23): `predictions.jsonl`,
+`decisions.jsonl`, `calls.jsonl` (36 lời gọi, có request id của nhà cung cấp và
+prompt đã gửi), `eval-report.txt`, `summary.json`, [`README.md`](runs/pa3-dev/README.md).
+
+Model `gemini-3.1-flash-lite`, free tier, checker ở commit `b23e078`. Kết quả
+**FAIL**, báo đúng như thật (PA#3 chưa có điểm chuẩn):
+
+| Chỉ số | Kết quả | Ngưỡng PA#4 |
+|---|---|---|
+| Phạt oan | 3 | 0 |
+| Recall | 64,9% (24/37) | ≥ 90% |
+| Unsure | 17,6% (18/102) | ≤ 20% |
+
+Ba lần phạt oan là do model, không phải luật cứng: 55 cặp ban-list do luật cứng
+quyết, không gọi model. 47 cặp semantic được gửi cho model nhưng chỉ 36 có
+trả lời được ghi log; 11 cặp còn lại nhiều khả năng là lời gọi lỗi/timeout
+(suy ra từ số đếm, log không ghi lý do từng cặp).
 
 ## 6. Video
 
@@ -123,7 +152,23 @@ Kịch bản chi tiết theo từng phút: [`docs/video-script.md`](docs/video-s
 Free tier: hoá đơn thực tế **$0**; bảng trên là giá list để so sánh và để
 phát hiện bất thường (ví dụ một prompt phình to).
 
-- **TODO**: điền số call/token/cost thực tế của lab demo sau khi chạy worker.
+**Số đo thực tế của dev run** (`runs/pa3-dev/calls.jsonl`): 36 lời gọi, 23.581
+token vào, 4.129 token ra, `costUsd` tổng **$0,0174** (≈ $0,000483 một lời
+gọi). `gemini-3.1-flash-lite` chưa có trong `src/model/cost.js` nên cost dùng
+giá dự phòng của `gemini-2.5-flash`: con số này cao hơn giá thật của model
+lite. Key free tier nên hoá đơn thực tế là $0.
+
+Một lab 80 bài, mỗi bài một constraint semantic như dev set (47 cặp semantic
+cho 47 bài): `80 × 0,000483 ≈ $0,039`; hai constraint mỗi bài vẫn dưới $0,08.
+Hai bảng dự toán ở trên (giả định 1.200 token vào) là mức trần thận trọng hơn.
+
+**Lab demo trên deployment (lab #2, 4 bài nộp, worker `gemini-3.1-flash-lite`)**:
+3 call model, 2.079 token vào, 408 token ra, giá niêm yết ước tính $0,001643
+(dùng bảng giá 2.5-flash nên cao hơn thực tế; free tier tính $0). Bài vi phạm
+và bài injection ra `violation` kèm evidence đúng dòng; bài đúng ra `pass` ở cả
+hai constraint (C1 do luật cứng, C2 do model). Lần chạy đầu với giới hạn 20 s
+bị `unsure: timeout` vì model lite mất khoảng 17 s mỗi call; nâng
+`MODEL_TIMEOUT_MS` lên 30000 rồi nộp lại (bài #5) thì ra `pass`.
 
 ## 9. Chạy thử local
 

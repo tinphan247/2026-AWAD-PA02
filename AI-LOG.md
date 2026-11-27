@@ -875,7 +875,12 @@
 - Found: the temporary file that held the old key on the VM was still there
   after the run; it was removed (`shred`). Several keys were pasted into chat
   while testing quotas and must be revoked after the submission.
-- Not verified: the walk-through of the three demo submissions on the deployed
-  build after the last merges, and that migration `002_compile_error_reason.sql`
-  has been run on Neon.
+- Verified afterwards on the deployment: migration `002_compile_error_reason.sql`
+  is applied on Neon, and the walk-through of three demo submissions works
+  (lab, submit, judge, review queue, 403 across classes, students see no verdict).
+- Found in the walk-through: the compliant demo got `unsure: timeout` on the
+  semantic constraint because `gemini-3.1-flash-lite` takes about 17 s per call
+  and the limit was 20 s. Changed: `MODEL_TIMEOUT_MS=30000` on the VM (the
+  timeout stays; it was not removed). The resubmission passed. The demo lab used
+  3 model calls, 2,079 tokens in, 408 out.
 - Evidence: PR #22, PR #23, `runs/pa3-dev/`.

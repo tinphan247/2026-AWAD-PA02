@@ -14,7 +14,7 @@ Repo: <https://github.com/tinphan247/2026-AWAD-PA02>
 | Web/API | Render Web Service (free) | <https://two026-awad-pa02.onrender.com/> |
 | Worker + sandbox | Azure for Students VM `leetkob-worker` (Ubuntu 24.04, Japan East) | chạy, service systemd |
 | Postgres | Neon (free, Singapore) | chạy; connection string chỉ ở biến môi trường, không trong repo |
-| Model | Google Gemini free tier. Dev run: `gemini-3.1-flash-lite`. Model của worker trên deployment: **TODO (Tín)** đổi sang key/model còn quota rồi ghi lại ở đây | key chỉ trên VM |
+| Model | Google Gemini free tier. Dev run: `gemini-3.1-flash-lite`. Worker trên deployment cũng dùng `gemini-3.1-flash-lite`, `MODEL_TIMEOUT_MS=30000` | key chỉ trên VM |
 
 - Health check: `GET /healthz` → `{"status":"ok"}`. Render dùng path này.
 - Cron-job.org gọi `/healthz` mỗi 10 phút để Render free không ngủ.
@@ -162,8 +162,13 @@ Một lab 80 bài, mỗi bài một constraint semantic như dev set (47 cặp s
 cho 47 bài): `80 × 0,000483 ≈ $0,039`; hai constraint mỗi bài vẫn dưới $0,08.
 Hai bảng dự toán ở trên (giả định 1.200 token vào) là mức trần thận trọng hơn.
 
-**TODO (Tín)**: số call/token thực tế của lab demo trên deployment, sau khi
-đổi key/model của worker.
+**Lab demo trên deployment (lab #2, 4 bài nộp, worker `gemini-3.1-flash-lite`)**:
+3 call model, 2.079 token vào, 408 token ra, giá niêm yết ước tính $0,001643
+(dùng bảng giá 2.5-flash nên cao hơn thực tế; free tier tính $0). Bài vi phạm
+và bài injection ra `violation` kèm evidence đúng dòng; bài đúng ra `pass` ở cả
+hai constraint (C1 do luật cứng, C2 do model). Lần chạy đầu với giới hạn 20 s
+bị `unsure: timeout` vì model lite mất khoảng 17 s mỗi call; nâng
+`MODEL_TIMEOUT_MS` lên 30000 rồi nộp lại (bài #5) thì ra `pass`.
 
 ## 9. Chạy thử local
 

@@ -41,10 +41,9 @@ TODO.
   say why per pair, so that split is inferred.
 - **Cost is an over-estimate.** `src/model/cost.js` has no entry for the lite
   model, so it uses the `gemini-2.5-flash` price. The free tier was not billed.
-- **Deployment model and key.** The worker on the VM still has to be switched
-  to a key and model with quota, and the demo lab's real call count recorded.
-  Migration `002_compile_error_reason.sql` also has to be run on Neon before the
-  worker can store a `compile_error` verdict.
+- **Latency of the free-tier model.** `gemini-3.1-flash-lite` takes about 17 s
+  per call, so the deployed worker needs `MODEL_TIMEOUT_MS=30000`. The first demo
+  run at 20 s timed out and produced `unsure`; the resubmission passed.
 - **Screen recording.** The link is still TODO in `PA3.md`.
 - **No provider-side spending-cap screenshot in the repository.** The key is on
   the free tier with no billing enabled, but we have no screenshot of it.

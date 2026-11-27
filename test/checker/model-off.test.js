@@ -23,9 +23,17 @@ const DEV = join(ROOT, 'leetkob-eval');
  * @param {Record<string, string>} [env]
  */
 function runChecker(args, env = { MODEL_OFF: '1' }) {
-  const { MODEL_API_KEY: _key, MODEL_OFF: _off, ...base } = process.env;
+  const {
+    MODEL_API_KEY: _key,
+    GEMINI_API_KEY: _gemini,
+    MODEL_OFF: _off,
+    MODEL_NAME: _model,
+    ...base
+  } = process.env;
   void _key;
+  void _gemini;
   void _off;
+  void _model;
   return spawnSync(process.execPath, ['--import', NO_NETWORK, CHECK, ...args], {
     encoding: 'utf8',
     env: { ...base, ...env },

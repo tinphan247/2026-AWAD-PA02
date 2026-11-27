@@ -19,9 +19,15 @@ import { createHardRules, parseBanList } from './hard-rules/index.js';
  * @typedef {{ line: number, text: string }} Evidence
  * @typedef {{ solution: string, constraint: string, verdict: 'pass' | 'violation' | 'unsure', evidence: Evidence[] }} Prediction
  * @typedef {{ solution: string, constraint: string, decided_by: 'hard_rule' | 'model' | 'model_off', model_called: boolean }} Decision
- * @typedef {(input: { statement: string, constraint: { id: string, text: string }, source: string }) =>
- *   Promise<{ verdict: Prediction['verdict'], evidence: Evidence[] }>} SemanticCheck
+ * @typedef {(input: {
+ *   statement: string,
+ *   constraint: { id: string, text: string },
+ *   source: string,
+ *   solution: string,
+ * }) => Promise<{ verdict: Prediction['verdict'], evidence: Evidence[] }>} SemanticCheck
  *   Only called when the model is on; its evidence must already hold original lines.
+ *   `solution` is the dataset key (`problem/sNN`) so a call log can point back to
+ *   the pair without keeping the source.
  */
 
 export class DatasetError extends Error {}
@@ -74,7 +80,7 @@ export async function checkDataset({ dataset, semantic }) {
           ({ verdict, evidence } = rules.check(source, banList));
           decidedBy = 'hard_rule';
         } else if (semantic) {
-          ({ verdict, evidence } = await semantic({ statement, constraint, source }));
+          ({ verdict, evidence } = await semantic({ statement, constraint, source, solution }));
           decidedBy = 'model';
           modelCalled = true;
         }

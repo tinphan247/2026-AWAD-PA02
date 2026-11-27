@@ -11,15 +11,20 @@
  * no ban-list pair reached the model. predictions.jsonl keeps exactly the
  * fields eval.mjs reads.
  *
- * With MODEL_OFF=1, or with no MODEL_API_KEY, it runs the hard rules only and
- * writes `unsure` for every semantic constraint, opening no network
- * connection. Student source code is never printed.
+ * With MODEL_OFF=1, or with no GEMINI_API_KEY / MODEL_API_KEY, it runs the
+ * hard rules only and writes `unsure` for every semantic constraint, opening
+ * no network connection. With a key it calls the same `judgeConstraint` the
+ * worker uses and writes `calls.jsonl` next to the predictions; the prompt in
+ * that log is the anonymised one (PA#3 exception in AGENTS.md). Student source
+ * code is never printed.
  */
 
 import { mkdirSync, renameSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 
 import { DatasetError, checkDataset } from '../src/checker/dataset.js';
+import { createModelSemantic } from '../src/checker/model-semantic.js';
+import { createCallLog } from '../src/model/calllog.js';
 
 const USAGE = 'usage: node bin/check.mjs --dataset <folder> --out <predictions.jsonl>';
 
@@ -38,17 +43,31 @@ if (!datasetArg || !outArg) {
 
 const dataset = resolve(datasetArg);
 const out = resolve(outArg);
-const modelWanted = process.env.MODEL_OFF !== '1' && Boolean(process.env.MODEL_API_KEY);
+const apiKey = process.env.GEMINI_API_KEY ?? process.env.MODEL_API_KEY ?? '';
+const model = process.env.MODEL_NAME ?? 'gemini-2.5-flash';
+const modelWanted = process.env.MODEL_OFF !== '1' && apiKey !== '';
 
+mkdirSync(dirname(out), { recursive: true });
+
+/** @type {import('../src/checker/dataset.js').SemanticCheck | null} */
+let semantic = null;
 if (modelWanted) {
-  // The model client (criterion 4) is not wired into the checker yet. Say so
-  // instead of pretending; semantic constraints stay unsure.
-  console.error('note: the semantic model is not wired into the checker yet; semantic = unsure');
+  // A fresh log per run, next to the predictions. The prompt it stores is the
+  // anonymised one the model saw (PA#3 exception in AGENTS.md), never the
+  // submitted source.
+  const callsPath = join(dirname(out), 'calls.jsonl');
+  writeFileSync(callsPath, '', 'utf8');
+  semantic = createModelSemantic({
+    apiKey,
+    model,
+    timeoutMs: Number(process.env.MODEL_TIMEOUT_MS ?? 20_000),
+    callLog: createCallLog({ filePath: callsPath }),
+  });
 }
 
 let result;
 try {
-  result = await checkDataset({ dataset, semantic: null });
+  result = await checkDataset({ dataset, semantic });
 } catch (error) {
   if (!(error instanceof DatasetError)) throw error;
   console.error(`${error.message}\n${USAGE}`);
@@ -66,7 +85,6 @@ function writeJsonl(file, rows) {
   renameSync(tmp, file);
 }
 
-mkdirSync(dirname(out), { recursive: true });
 writeJsonl(out, result.predictions);
 writeJsonl(join(dirname(out), 'decisions.jsonl'), result.decisions);
 
@@ -76,5 +94,5 @@ for (const p of result.predictions) counts[p.verdict] = (counts[p.verdict] ?? 0)
 console.log(
   `wrote ${result.predictions.length} predictions to ${out} ` +
     `(pass ${counts.pass}, violation ${counts.violation}, unsure ${counts.unsure}; ` +
-    `model ${modelWanted ? 'not wired' : 'off'})`,
+    `model ${modelWanted ? `on (${model})` : 'off'})`,
 );

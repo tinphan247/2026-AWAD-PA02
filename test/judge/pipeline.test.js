@@ -492,3 +492,87 @@ test('the recorder writes the call to model_calls with the anonymised prompt', a
 
   await db.close();
 });
+
+test('a compile error never reaches the model: semantic constraints are unsure with compile_error', async () => {
+  const db = await createTestDb();
+  const ids = await seedLab(db);
+  await prepareLab(db, ids);
+  const submissionId = await addSubmission(db, ids.lab, ids.student);
+
+  let modelCalls = 0;
+  const judge = createJudge({
+    db,
+    rules: {
+      check() {
+        return { verdict: 'pass', evidence: [], unsureReason: null, decidedBy: 'hard_rule' };
+      },
+    },
+    apiKey: 'test-key',
+    model: 'gemini-2.5-flash',
+    sandbox: async () => ({
+      verdict: 'CE',
+      compile: 'error',
+      tests: [],
+      killedByHost: false,
+      containerName: 'sbx-test',
+    }),
+    modelJudge: async () => {
+      modelCalls += 1;
+      throw new Error('the model must not be called for a compile error');
+    },
+  });
+
+  const result = await judge(await submissionPayload(db, submissionId, ids.lab));
+
+  assert.equal(modelCalls, 0);
+  assert.equal(result.judgeVerdict, 'CE');
+  assert.deepEqual(result.verdicts[1], {
+    constraintId: ids.constraints[1],
+    verdict: 'unsure',
+    evidence: [],
+    decidedBy: 'fallback',
+    unsureReason: 'compile_error',
+  });
+
+  await db.close();
+});
+
+test('on a compile error a ban-list constraint is still decided by the hard rules', async () => {
+  const db = await createTestDb();
+  const ids = await seedLab(db);
+  await prepareLab(db, ids);
+  const submissionId = await addSubmission(db, ids.lab, ids.student);
+
+  const judge = createJudge({
+    db,
+    rules: {
+      check() {
+        return {
+          verdict: 'violation',
+          evidence: [{ line: 2, text: 'int main() { std::sort(a, a + 3); }' }],
+          unsureReason: null,
+          decidedBy: 'hard_rule',
+        };
+      },
+    },
+    apiKey: 'test-key',
+    model: 'gemini-2.5-flash',
+    sandbox: async () => ({
+      verdict: 'CE',
+      compile: 'error',
+      tests: [],
+      killedByHost: false,
+      containerName: 'sbx-test',
+    }),
+    modelJudge: async () => {
+      throw new Error('the model must not be called for a compile error');
+    },
+  });
+
+  const result = await judge(await submissionPayload(db, submissionId, ids.lab));
+
+  assert.equal(result.verdicts[0]?.verdict, 'violation');
+  assert.equal(result.verdicts[0]?.decidedBy, 'hard_rule');
+
+  await db.close();
+});

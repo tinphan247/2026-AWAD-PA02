@@ -209,7 +209,7 @@ submissions(id, lab_id, student_id, source_code,
 jobs(id, submission_id UNIQUE, status[queued|claimed|done|failed], lease_until, attempts)
 verdicts(id, submission_id, constraint_id, verdict[pass|violation|unsure],
          evidence_json, decided_by[hard_rule|model|fallback],
-         unsure_reason[model_unsure|schema_invalid|evidence_mismatch|timeout|cost_cap|hard_rule_unsure],
+         unsure_reason[model_unsure|schema_invalid|evidence_mismatch|timeout|cost_cap|hard_rule_unsure|compile_error],
          ta_decision[NULL|pass|violation], reviewed BOOL,
          UNIQUE(submission_id, constraint_id))
 model_calls(id, submission_id, constraint_id, provider, model, provider_request_id,
@@ -397,7 +397,7 @@ Ghi rõ free tier thực tế = 0 USD, nhưng vẫn trình bày phép tính theo
   2. fake sleep quá timeout → verdict `unsure`.
 - Verdict **chỉ** vào bảng review của TA. API student không trả verdict constraint (FAQ-08).
 - **Queue composition** (FAQ-10): mọi `violation` + mọi `unsure` + 10% số `pass` chọn ngẫu nhiên, làm tròn lên; verdict là cặp (bài counted, constraint).
-- **`unsure` flow** (FAQ-09): TA thấy nguyên nhân (`model_unsure`, `schema_invalid`, `evidence_mismatch`, `timeout`, `cost_cap`, `hard_rule_unsure`) và các dòng mô hình nghi ngờ; TA phải chọn `pass`/`violation`, không có mặc định; chọn `violation` thì phải chỉ ≥1 dòng evidence. `unsure` **không bao giờ tự thành deduction**.
+- **`unsure` flow** (FAQ-09): TA thấy nguyên nhân (`model_unsure`, `schema_invalid`, `evidence_mismatch`, `timeout`, `cost_cap`, `hard_rule_unsure`, `compile_error`) và các dòng mô hình nghi ngờ; TA phải chọn `pass`/`violation`, không có mặc định; chọn `violation` thì phải chỉ ≥1 dòng evidence. `unsure` **không bao giờ tự thành deduction**.
 - Lab còn `unsure` chưa xử lý → không Publish được (FAQ-09, FAQ-12).
 - Nếu có nút Publish: từ chối khi còn verdict `reviewed=false` hoặc chưa hết hạn (FAQ-12). PA#3 không publish mark.
 - **Student trước publish** (FAQ-08): chỉ thấy kết quả chấm test; không thấy verdict/evidence/deduction; không thấy unsure, bài bị bác, hay có nằm trong mẫu 10%.

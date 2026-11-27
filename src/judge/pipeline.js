@@ -39,7 +39,8 @@ import { runInSandbox } from '../sandbox/run.js';
  */
 
 /**
- * The values `verdicts.unsure_reason` accepts (`db/migrations/001_init.sql`).
+ * The values `verdicts.unsure_reason` accepts (`db/migrations/001_init.sql`,
+ * widened by `002_compile_error_reason.sql`).
  * A reason outside this set would abort the transaction that stores the job,
  * so an unexpected one is stored as `model_unsure` instead of losing the whole
  * submission and re-billing the model on the retry.
@@ -53,6 +54,7 @@ const STORABLE_UNSURE_REASONS = new Set([
   'timeout',
   'cost_cap',
   'hard_rule_unsure',
+  'compile_error',
 ]);
 
 /**
@@ -213,6 +215,20 @@ export function createJudge({
       const banList = parseBanList(constraint.text);
       if (banList !== null) {
         verdicts.push(toRow(constraint.id, rules.check(submission.sourceCode, banList)));
+        continue;
+      }
+
+      // Code that does not compile is not worth a model call (cost): a TA
+      // settles the semantic pair. The ban list above still ran.
+      if (run.verdict === 'CE') {
+        verdicts.push(
+          toRow(constraint.id, {
+            verdict: 'unsure',
+            evidence: [],
+            decidedBy: 'fallback',
+            unsureReason: 'compile_error',
+          }),
+        );
         continue;
       }
 

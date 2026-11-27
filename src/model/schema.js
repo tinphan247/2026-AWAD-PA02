@@ -16,6 +16,7 @@ export const UNSURE_REASONS = Object.freeze([
   'timeout',
   'cost_cap',
   'hard_rule_unsure',
+  'compile_error',
 ]);
 
 /**

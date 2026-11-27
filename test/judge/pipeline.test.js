@@ -511,7 +511,7 @@ test('a compile error never reaches the model: semantic constraints are unsure w
     model: 'gemini-2.5-flash',
     sandbox: async () => ({
       verdict: 'CE',
-      compile: 'failed',
+      compile: 'error',
       tests: [],
       killedByHost: false,
       containerName: 'sbx-test',
@@ -559,7 +559,7 @@ test('on a compile error a ban-list constraint is still decided by the hard rule
     model: 'gemini-2.5-flash',
     sandbox: async () => ({
       verdict: 'CE',
-      compile: 'failed',
+      compile: 'error',
       tests: [],
       killedByHost: false,
       containerName: 'sbx-test',

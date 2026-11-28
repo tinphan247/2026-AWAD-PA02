@@ -4,8 +4,8 @@ Nhóm: Phan Trung Tín (23120372), Nguyễn Sơn Tùng (23120399), Minh Tuệ (2
 
 Repo: <https://github.com/tinphan247/2026-AWAD-PA02>
 
-> Đây là bản nháp của `PA3.md`. Các mục ghi **TODO** cần điền sau khi deploy.
-> Không đánh dấu xong khi chưa có bằng chứng.
+> Mọi mục dưới đây có bằng chứng trong repo hoặc trên deployment; chỗ chưa có
+> bằng chứng thì ghi rõ là chưa có.
 
 ## 1. Kiến trúc và deployment
 

@@ -112,7 +112,7 @@ trả lời được ghi log; 11 cặp còn lại nhiều khả năng là lời 
 
 ## 6. Video
 
-**TODO** link video ≤5 phút: TA tạo lab → 3 sinh viên nộp 3 bài → worker chấm →
+Video ≤5 phút ([Google Drive, anyone with the link](https://drive.google.com/file/d/1cf2famtwMWCDJZ-A-vUSR-VqzKmfeh4O/view?usp=drive_link)): TA tạo lab → 3 sinh viên nộp 3 bài → worker chấm →
 TA review queue (verdict/evidence/deduction) → student chỉ thấy kết quả test,
 không thấy verdict constraint trước publish.
 

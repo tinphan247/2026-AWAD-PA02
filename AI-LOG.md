@@ -884,3 +884,62 @@
   timeout stays; it was not removed). The resubmission passed. The demo lab used
   3 model calls, 2,079 tokens in, 408 out.
 - Evidence: PR #22, PR #23, `runs/pa3-dev/`.
+
+## 2026-11-27 — Tín — Claude (DeepSeek V4.1 Flash Free): Azure worker, checker model path, demo files
+
+- Task: stand the worker up on the Azure VM, wire the semantic model into the
+  checker command (criterion 6), and prove the deployment end to end before
+  recording the video.
+- Changed (PR #20): `bin/check.mjs` now calls the same `judgeConstraint` the
+  worker uses through `src/checker/model-semantic.js`, instead of writing
+  `unsure` for every semantic constraint. A run with a key writes `calls.jsonl`
+  next to the predictions, tagged with the dataset keys, so the log can be
+  audited without the source. `MODEL_OFF=1` or no key still means hard rules
+  only and no network. Tests: the adapter maps evidence and logs a costed call;
+  the dataset layer sends only semantic pairs and passes the keys.
+- Changed (PR #21): `demo/` holds byte-for-byte copies of `sort-merge` `s01`,
+  `s04`, `s09` (compliant, `std::sort`, prompt injection) plus the constraint
+  and test sources to paste into the lab form. `docs/video-script.md` now says
+  Azure instead of Oracle, uses the real deductions (3 and 4) instead of the
+  placeholders (5 and 3), and the current test count.
+- Verified on the VM: `deploy/oracle-setup.sh` built `leetkob-sandbox:latest`,
+  installed the systemd unit with the right `User=` and `WorkingDirectory=`,
+  and the three demo files compiled and passed all seven `sort-merge` tests in
+  the sandbox (1.7–4.5 s each).
+- Verified on the deployment: a temporary lab in class 2, created through the
+  UI, took a submission that the worker judged through Neon (sandbox `AC`, ban
+  list decided by the hard rule, the semantic constraint `unsure` with
+  `model_unsure` because no key was set on the worker yet). The lab, the
+  submission, the verdicts, the job and the call rows were deleted afterwards,
+  leaving the database empty for the real walk-through.
+- Rejected: moving Postgres onto the worker VM to dodge Neon's free compute
+  hours. Render would have to reach it over the public internet, which is worse
+  than the quota risk. Kept Neon and noted the mitigation: raise
+  `WORKER_MAX_IDLE_MS` after marking so the database can scale to zero.
+- Found: the first `GET /healthz` of the day took 12.5 s, so the service had
+  gone to sleep. `PA3.md` said cron-job.org pings it every 10 minutes, but
+  nothing in the repository or on the VM showed that job.
+- Evidence: PR #20, PR #21, `runs/pa3-dev-model-off/`, the review queue of lab
+  #2 on the deployment.
+
+## 2026-11-28 — Tín — Claude (DeepSeek V4.1 Flash Free): pre-submission check
+
+- Task: check the deployment and the repository the day before the deadline.
+- Found: the worker VM was still on `f81554b`, three PRs behind `main`, so it
+  was running without the checker pacing from PR #22. Pulled `main` (`325a4a7`)
+  and restarted `leetkob-worker`; the unit stayed active.
+- Verified: tag `pa3` (`a859d61`) has a green run with both jobs, `ci` and
+  `sandbox`; the deployed review queue shows the violation evidence and the
+  pass rows for lab #2; the worker holds the model key
+  (`gemini-3.1-flash-lite`, `MODEL_TIMEOUT_MS=30000`).
+- Found: nothing was pinging the Render service, so the cron-job.org line in
+  `PA3.md` was not true. Changed: `deploy/leetkob-keepalive.service` and
+  `.timer` ping `/healthz` every 10 minutes from the worker VM, which is already
+  on for PA#4. Installed and enabled on the VM; a manual run returned
+  `{"status":"ok"}` and the timer shows the next run. The document now names
+  what is installed. `/healthz` does not query Postgres, so this does not keep
+  Neon's compute awake.
+- Still open at the time of writing: the video link (Tuệ records it), the final
+  self-score and therefore the zip name. The tag is a lightweight tag on
+  `a859d61`; if the video commit lands after it, the tag has to be moved to the
+  final commit before the zip is built, or the tag and the zip disagree.

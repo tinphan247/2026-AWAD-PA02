@@ -27,9 +27,10 @@ provider-agnostic: [`docs/azure-vm.md`](azure-vm.md) is the current runbook,
    unreachable. Do not set `PORT` (Render provides it). **Do not set
    `MODEL_API_KEY` or `GEMINI_API_KEY` here.**
 3. Health check path: `/healthz` (or `/health`).
-4. Free tier sleeps after 15 minutes of inactivity: create a cron-job.org job
-   that GETs `https://<app>.onrender.com/healthz` every 10 minutes
-   (24/7 ≈ 730 h/month, just under the 750 h limit).
+4. Free tier sleeps after 15 minutes of inactivity. The worker VM runs
+   [`deploy/leetkob-keepalive.timer`](../deploy/leetkob-keepalive.timer), which
+   GETs `https://<app>.onrender.com/healthz` every 10 minutes (24/7 ≈ 730 h/month,
+   just under the 750 h limit). Any other uptime pinger works as well.
 
 ## 3. Cloud VM (worker + sandbox)
 
@@ -61,9 +62,17 @@ Oracle Cloud Always Free remains a valid fallback: the same script and unit
 work there, and [`docs/oracle-vm.md`](oracle-vm.md) covers signup, card
 verification and firewall. Do not upgrade Oracle to Pay As You Go.
 
-## 4. Cron ping
+## 4. Keep-alive ping
 
-- cron-job.org: GET `https://<app>.onrender.com/healthz` every 10 minutes.
+- Worker VM: `sudo cp deploy/leetkob-keepalive.service deploy/leetkob-keepalive.timer
+  /etc/systemd/system/ && sudo systemctl daemon-reload && sudo systemctl enable
+  --now leetkob-keepalive.timer`. It GETs `/healthz` every 10 minutes and the
+  timer survives a reboot. `systemctl list-timers leetkob-keepalive.timer`
+  shows the next run.
+- `cron-job.org` or any uptime pinger on the same URL is an alternative if the
+  VM is not running.
+- `/healthz` answers without a database query, so the ping keeps Render awake
+  without keeping Neon's compute awake.
 - Optional: a second job that runs a tiny CPU task on the worker VM every few
   hours so an Always Free instance is not reclaimed as idle (Azure does not
   reclaim; this only matters on Oracle).

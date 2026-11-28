@@ -4,8 +4,8 @@ Nhóm: Phan Trung Tín (23120372), Nguyễn Sơn Tùng (23120399), Minh Tuệ (2
 
 Repo: <https://github.com/tinphan247/2026-AWAD-PA02>
 
-> Đây là bản nháp của `PA3.md`. Các mục ghi **TODO** cần điền sau khi deploy.
-> Không đánh dấu xong khi chưa có bằng chứng.
+> Mọi mục dưới đây có bằng chứng trong repo hoặc trên deployment; chỗ chưa có
+> bằng chứng thì ghi rõ là chưa có.
 
 ## 1. Kiến trúc và deployment
 
@@ -17,7 +17,9 @@ Repo: <https://github.com/tinphan247/2026-AWAD-PA02>
 | Model | Google Gemini free tier. Dev run: `gemini-3.1-flash-lite`. Worker trên deployment cũng dùng `gemini-3.1-flash-lite`, `MODEL_TIMEOUT_MS=30000` | key chỉ trên VM |
 
 - Health check: `GET /healthz` → `{"status":"ok"}`. Render dùng path này.
-- Cron-job.org gọi `/healthz` mỗi 10 phút để Render free không ngủ.
+- Render free ngủ sau 15 phút không có request: timer systemd trên worker VM
+  gọi `/healthz` mỗi 10 phút ([`deploy/leetkob-keepalive.timer`](deploy/leetkob-keepalive.timer)).
+  `/healthz` không đụng Postgres nên Neon vẫn scale to zero được.
 - `GEMINI_API_KEY` chỉ đặt trên worker VM; **không** đặt trên Render và
   **không** truyền vào sandbox.
 - Worker: `worker/index.js` → `src/judge/pipeline.js` chạy sandbox → hard rules
@@ -112,9 +114,16 @@ trả lời được ghi log; 11 cặp còn lại nhiều khả năng là lời 
 
 ## 6. Video
 
-**TODO** link video ≤5 phút: TA tạo lab → 3 sinh viên nộp 3 bài → worker chấm →
-TA review queue (verdict/evidence/deduction) → student chỉ thấy kết quả test,
-không thấy verdict constraint trước publish.
+Video ≤5 phút, quyền "anyone with the link":
+<https://drive.google.com/file/d/1cf2famtwMWCDJZ-A-vUSR-VqzKmfeh4O/view>
+
+Nội dung: TA tạo lab qua UI → 3 sinh viên nộp 3 bài → worker chấm → TA review
+queue (verdict/evidence/mức trừ) → student chỉ thấy kết quả test, không thấy
+verdict constraint trước publish → TA lớp khác mở lab nhận 403.
+
+Lab trong video là **lab #5 "lab 3"** (lớp 1): bài #13 `pass` cả hai constraint,
+bài #14 `violation` cả hai (evidence dòng 11), bài #15 injection ra `violation`
+ở constraint semantic dù comment lừa model trả `pass`.
 
 Kịch bản chi tiết theo từng phút: [`docs/video-script.md`](docs/video-script.md).
 

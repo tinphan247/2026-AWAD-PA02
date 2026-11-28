@@ -1,0 +1,17 @@
+# Timer for deploy/leetkob-keepalive.service (PA#3): one ping every 10 minutes.
+#
+# OnBootSec covers the first 10 minutes after a reboot; OnUnitActiveSec then
+# keeps the interval. Persistent=true catches up one missed run after downtime,
+# which is enough: the next ping wakes the service anyway.
+
+[Unit]
+Description=Ping the LeeTKOB deployment every 10 minutes
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=10min
+AccuracySec=30s
+Persistent=true
+
+[Install]
+WantedBy=timers.target

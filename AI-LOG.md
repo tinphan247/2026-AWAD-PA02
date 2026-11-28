@@ -917,8 +917,8 @@
   than the quota risk. Kept Neon and noted the mitigation: raise
   `WORKER_MAX_IDLE_MS` after marking so the database can scale to zero.
 - Found: the first `GET /healthz` of the day took 12.5 s, so the service had
-  gone to sleep. `PA3.md` says cron-job.org pings it every 10 minutes; that has
-  to be confirmed before the claim stays in the document.
+  gone to sleep. `PA3.md` said cron-job.org pings it every 10 minutes, but
+  nothing in the repository or on the VM showed that job.
 - Evidence: PR #20, PR #21, `runs/pa3-dev-model-off/`, the review queue of lab
   #2 on the deployment.
 
@@ -932,7 +932,14 @@
   `sandbox`; the deployed review queue shows the violation evidence and the
   pass rows for lab #2; the worker holds the model key
   (`gemini-3.1-flash-lite`, `MODEL_TIMEOUT_MS=30000`).
-- Still open at the time of writing: the video link, the final self-score and
-  therefore the zip name. The tag is a lightweight tag on `a859d61`; if the
-  video commit lands after it, the tag has to be moved to the final commit
-  before the zip is built, or the tag and the zip disagree.
+- Found: nothing was pinging the Render service, so the cron-job.org line in
+  `PA3.md` was not true. Changed: `deploy/leetkob-keepalive.service` and
+  `.timer` ping `/healthz` every 10 minutes from the worker VM, which is already
+  on for PA#4. Installed and enabled on the VM; a manual run returned
+  `{"status":"ok"}` and the timer shows the next run. The document now names
+  what is installed. `/healthz` does not query Postgres, so this does not keep
+  Neon's compute awake.
+- Still open at the time of writing: the video link (Tuệ records it), the final
+  self-score and therefore the zip name. The tag is a lightweight tag on
+  `a859d61`; if the video commit lands after it, the tag has to be moved to the
+  final commit before the zip is built, or the tag and the zip disagree.

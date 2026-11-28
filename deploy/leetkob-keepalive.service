@@ -1,0 +1,22 @@
+# Keep the Render free tier awake (PA#3).
+#
+# Render sleeps a free web service after 15 minutes without a request, and the
+# first request after that takes 12-50 seconds. The worker VM is always on for
+# PA#3 and PA#4, so it pings the health check every 10 minutes with a systemd
+# timer. `/healthz` does not touch Postgres, so this does not keep Neon awake.
+#
+# Install on the worker VM:
+#   sudo cp deploy/leetkob-keepalive.service deploy/leetkob-keepalive.timer /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now leetkob-keepalive.timer
+#   systemctl list-timers leetkob-keepalive.timer
+
+[Unit]
+Description=Ping the LeeTKOB deployment so the Render free tier does not sleep
+Documentation=https://github.com/tinphan247/2026-AWAD-PA02/blob/main/docs/deploy.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/curl -fsS -m 60 https://two026-awad-pa02.onrender.com/healthz

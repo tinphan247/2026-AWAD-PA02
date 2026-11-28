@@ -17,7 +17,9 @@ Repo: <https://github.com/tinphan247/2026-AWAD-PA02>
 | Model | Google Gemini free tier. Dev run: `gemini-3.1-flash-lite`. Worker trên deployment cũng dùng `gemini-3.1-flash-lite`, `MODEL_TIMEOUT_MS=30000` | key chỉ trên VM |
 
 - Health check: `GET /healthz` → `{"status":"ok"}`. Render dùng path này.
-- Cron-job.org gọi `/healthz` mỗi 10 phút để Render free không ngủ.
+- Render free ngủ sau 15 phút không có request: timer systemd trên worker VM
+  gọi `/healthz` mỗi 10 phút ([`deploy/leetkob-keepalive.timer`](deploy/leetkob-keepalive.timer)).
+  `/healthz` không đụng Postgres nên Neon vẫn scale to zero được.
 - `GEMINI_API_KEY` chỉ đặt trên worker VM; **không** đặt trên Render và
   **không** truyền vào sandbox.
 - Worker: `worker/index.js` → `src/judge/pipeline.js` chạy sandbox → hard rules

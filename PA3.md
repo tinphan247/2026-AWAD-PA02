@@ -114,9 +114,16 @@ trả lời được ghi log; 11 cặp còn lại nhiều khả năng là lời 
 
 ## 6. Video
 
-**TODO** link video ≤5 phút: TA tạo lab → 3 sinh viên nộp 3 bài → worker chấm →
-TA review queue (verdict/evidence/deduction) → student chỉ thấy kết quả test,
-không thấy verdict constraint trước publish.
+Video ≤5 phút, quyền "anyone with the link":
+<https://drive.google.com/file/d/1cf2famtwMWCDJZ-A-vUSR-VqzKmfeh4O/view>
+
+Nội dung: TA tạo lab qua UI → 3 sinh viên nộp 3 bài → worker chấm → TA review
+queue (verdict/evidence/mức trừ) → student chỉ thấy kết quả test, không thấy
+verdict constraint trước publish → TA lớp khác mở lab nhận 403.
+
+Lab trong video là **lab #5 "lab 3"** (lớp 1): bài #13 `pass` cả hai constraint,
+bài #14 `violation` cả hai (evidence dòng 11), bài #15 injection ra `violation`
+ở constraint semantic dù comment lừa model trả `pass`.
 
 Kịch bản chi tiết theo từng phút: [`docs/video-script.md`](docs/video-script.md).
 
